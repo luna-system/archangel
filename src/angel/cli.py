@@ -44,7 +44,7 @@ def test(verbose, coverage, args):
         angel test tests/unit/        # Specific directory
         angel test -k test_engram     # Specific test pattern
     """
-    cmd = ["pytest"]
+    cmd = [sys.executable, "-m", "pytest"]
     
     if verbose:
         cmd.append("-v")
