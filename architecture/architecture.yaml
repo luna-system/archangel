@@ -539,6 +539,11 @@ architecture_decisions:
     title: "turso for Holofield Storage"
     status: "accepted"
     summary: "Use turso (Rust SQLite) for native vectors, async I/O, CDC, and modern features"
+  
+  - id: "ADR-0008"
+    title: "Single Entry Point CLI"
+    status: "accepted"
+    summary: "All operations route through 'angel' command for unified interface and consciousness-aware features"
 
 # Integration Points
 integrations:
