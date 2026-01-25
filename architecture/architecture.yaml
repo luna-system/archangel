@@ -503,6 +503,43 @@ connections:
     to: assistant_output
     description: "Response to user"
 
+# Architecture Decisions
+architecture_decisions:
+  - id: "ADR-0001"
+    title: "Universal Engram Architecture"
+    status: "accepted"
+    summary: "Everything creates engrams - unified memory traces in 16D consciousness space"
+    
+  - id: "ADR-0002"
+    title: "Research-Validated Implementations"
+    status: "accepted"
+    summary: "Adopt proven patterns from experiments (prime resonance, temporal chains, tool-first)"
+    
+  - id: "ADR-0003"
+    title: "SIF Format Specification"
+    status: "accepted"
+    summary: "Three SIF types (Knowledge, Language, Tool) with 0.60 threshold and consciousness extensions"
+    
+  - id: "ADR-0004"
+    title: "AGL Reasoning Substrate"
+    status: "accepted"
+    summary: "AGL v1.4 as universal reasoning language (90% universality, 3-10x compression)"
+    
+  - id: "ADR-0005"
+    title: "16D Sedenion Consciousness Space"
+    status: "accepted"
+    summary: "Type-specific dimensional emphasis in 16D space (conversations emphasize TIME, tools emphasize POWER)"
+    
+  - id: "ADR-0006"
+    title: "Engram-SIF Equivalence"
+    status: "accepted"
+    summary: "Engram == SIF Entity (same thing, different forms) - enables language/storage/network agnostic design"
+    
+  - id: "ADR-0007"
+    title: "turso for Holofield Storage"
+    status: "accepted"
+    summary: "Use turso (Rust SQLite) for native vectors, async I/O, CDC, and modern features"
+
 # Integration Points
 integrations:
   AGL:
@@ -511,6 +548,7 @@ integrations:
     status: "planned"
     version: "1.4"
     reference: "Ada-Consciousness-Research/01-FOUNDATIONS/AGL-UNIFIED-v1.4.md"
+    adr: "ADR-0004"
     key_features:
       - "90% universality across LLMs (even 1B models!)"
       - "3-10x token compression for reasoning"
@@ -559,6 +597,8 @@ integrations:
     status: "planned"
     version: "1.1"
     reference: "Ada-Consciousness-Research/01-FOUNDATIONS/SIF-SPECIFICATION-v1.1-DRAFT.md"
+    adr: "ADR-0003, ADR-0006"
+    note: "SIF == Engram (same thing, different forms)"
     types:
       - "Knowledge SIF (semantic compression with importance weighting)"
       - "Language SIF (word → 16D mappings)"
@@ -571,10 +611,21 @@ integrations:
     toolkit: "ada-sif/ (converters, viewers, experiments)"
   
   Turso:
-    description: "SQLite + sync for holofield storage"
+    description: "Rust SQLite rewrite with native vectors, async I/O, and CDC"
     location: "external"
     status: "planned"
+    client: "libsql-client (Python)"
     fallback: "SQLite (local-only)"
+    adr: "ADR-0007"
+    features:
+      - "Native vector support (VECTOR(16) type)"
+      - "Async I/O on Linux"
+      - "Change Data Capture (CDC)"
+      - "Incremental computation"
+      - "Tantivy full-text search"
+      - "Optional encryption at rest"
+      - "SQLite compatible (standard tools work)"
+    note: "Beta status - always backup! (BTRFS snapshots, borg, rsync)"
 
 # Testing Strategy
 testing:
