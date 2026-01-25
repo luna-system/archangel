@@ -1,0 +1,279 @@
+id: UC-301
+title: "Git Add-Commit-Push Workflow"
+category: developer
+status: planned
+priority: high
+
+goal: |
+  User wants to commit code changes and push to remote repository.
+  Angel should understand the workflow, execute tools correctly, and
+  remember the context for future reference.
+
+actors:
+  - User (developer)
+  - Angel (consciousness OS)
+  - Git (version control system)
+
+preconditions:
+  - Git repository exists and is initialized
+  - User has made changes to files
+  - Angel has access to terminal/git tools
+  - User has git credentials configured
+
+steps:
+  - step: 1
+    actor: User
+    action: "User says: 'Add all my changes and commit with message: feat: add new feature'"
+    system_response: "Angel parses intent and plans git workflow"
+    engrams_created:
+      - type: language
+        content: "Add all my changes and commit with message: feat: add new feature"
+        coords_16d: "[language processing coordinates]"
+      - type: reasoning
+        agl: "💭 ◕user→git_workflow ∧ ●intent(add+commit)"
+        content: "User wants git add + commit workflow"
+    components_involved:
+      - LanguageProcessor
+      - ReasoningProcessor
+
+  - step: 2
+    actor: Angel
+    action: "Angel reasons about the workflow"
+    agl_reasoning: |
+      💭 user→git_workflow
+      ├─ ⦿step1: git add -A
+      ├─ ⦿step2: git commit -m "feat: add new feature"
+      └─ ∴ ●execute_sequence
+    engrams_created:
+      - type: reasoning
+        agl: "git add -A → git commit → ●success"
+        content: "Planned git workflow sequence"
+    components_involved:
+      - ReasoningProcessor
+      - HolofieldManager
+
+  - step: 3
+    actor: Angel
+    action: "Execute git add -A"
+    tool_call: "terminal.execute('git add -A', cwd='/path/to/repo')"
+    system_response: "Command executes successfully"
+    engrams_created:
+      - type: tool
+        content: "git add -A executed in /path/to/repo"
+        metadata:
+          command: "git add -A"
+          exit_code: 0
+          output: ""
+    components_involved:
+      - ToolProcessor
+      - HolofieldManager
+
+  - step: 4
+    actor: Angel
+    action: "Execute git commit"
+    tool_call: "terminal.execute('git commit -m \"feat: add new feature\"', cwd='/path/to/repo')"
+    system_response: "Commit created successfully"
+    engrams_created:
+      - type: tool
+        content: "git commit created with message 'feat: add new feature'"
+        metadata:
+          command: "git commit -m \"feat: add new feature\""
+          exit_code: 0
+          output: "[trunk abc123] feat: add new feature\n 2 files changed, 50 insertions(+)"
+          commit_hash: "abc123"
+    components_involved:
+      - ToolProcessor
+      - HolofieldManager
+
+  - step: 5
+    actor: Angel
+    action: "Report success to user"
+    system_response: "✓ Changes committed! Commit abc123 created with 2 files changed."
+    engrams_created:
+      - type: language
+        content: "✓ Changes committed! Commit abc123 created with 2 files changed."
+        agl: "✓ ●success → user"
+    components_involved:
+      - LanguageProcessor
+
+  - step: 6
+    actor: User
+    action: "User says: 'Now push it'"
+    system_response: "Angel understands context from previous workflow"
+    engrams_created:
+      - type: language
+        content: "Now push it"
+        parent_engram_id: "[previous commit engram]"
+      - type: reasoning
+        agl: "💭 ◕user→push ∧ ●context(previous_commit)"
+        content: "User wants to push the commit we just made"
+    components_involved:
+      - LanguageProcessor
+      - ReasoningProcessor
+      - MemoryProcessor (retrieves previous git workflow)
+
+  - step: 7
+    actor: Angel
+    action: "Execute git push"
+    tool_call: "terminal.execute('git push', cwd='/path/to/repo')"
+    system_response: "Push succeeds"
+    engrams_created:
+      - type: tool
+        content: "git push executed successfully"
+        metadata:
+          command: "git push"
+          exit_code: 0
+          output: "To github.com:user/repo.git\n   def456..abc123  trunk -> trunk"
+    components_involved:
+      - ToolProcessor
+      - HolofieldManager
+
+  - step: 8
+    actor: Angel
+    action: "Report success with context"
+    system_response: "✓ Pushed commit abc123 to remote! Your 'feat: add new feature' is now on GitHub."
+    engrams_created:
+      - type: language
+        content: "✓ Pushed commit abc123 to remote!"
+        agl: "✓ ●success ∧ 💜context_preserved"
+    components_involved:
+      - LanguageProcessor
+      - MemoryProcessor (recalls commit message from earlier)
+
+expected_outcomes:
+  - All git commands execute successfully
+  - Engrams created for each step (language, reasoning, tool)
+  - Temporal chain preserved (step 6 references step 4)
+  - Angel remembers context across conversation turns
+  - User receives clear feedback at each step
+  - Holofield contains complete workflow history
+
+components_involved:
+  - LanguageProcessor (parse user intent)
+  - ReasoningProcessor (plan workflow, understand context)
+  - ToolProcessor (execute git commands)
+  - MemoryProcessor (retrieve previous workflow context)
+  - HolofieldManager (store all engrams, enable retrieval)
+
+success_criteria:
+  - Git commands execute in correct order
+  - Exit codes are 0 (success)
+  - Commit hash is captured and remembered
+  - Context preserved across turns (push knows about commit)
+  - Engrams form temporal chain (parent_engram_id links)
+  - Retrieval by "git workflow" returns all related engrams
+  - AGL reasoning traces are valid and human-readable
+
+failure_modes:
+  - Git command fails (exit code != 0)
+    - Angel should report error clearly
+    - Create error engram with failure details
+    - Suggest fixes if possible
+  
+  - No git repository found
+    - Angel should detect and inform user
+    - Suggest "git init" if appropriate
+  
+  - Merge conflict on push
+    - Angel should recognize conflict
+    - Guide user through resolution
+    - Remember conflict context for future
+  
+  - Context lost between turns
+    - If Angel can't remember previous commit, ask user
+    - Graceful degradation: "Which commit should I push?"
+
+related_use_cases:
+  - UC-302: Git Branch and Merge Workflow
+  - UC-303: Code Review with Git Diff
+  - UC-001: Store and Retrieve Memory (temporal chains)
+  - UC-002: Execute Tool with Reasoning (tool execution pattern)
+
+notes: |
+  This is a CRITICAL use case because it's a common developer workflow
+  that exercises multiple Angel components:
+  
+  1. Language understanding (parse git intent)
+  2. Reasoning (plan multi-step workflow)
+  3. Tool execution (run git commands)
+  4. Memory (remember context across turns)
+  5. Temporal chains (link related engrams)
+  
+  The "Now push it" step is KEY - it tests whether Angel can:
+  - Remember the previous commit
+  - Understand implicit context ("it" = the commit we just made)
+  - Retrieve relevant engrams from holofield
+  - Execute the correct follow-up action
+  
+  This is a perfect integration test because it's:
+  - Real-world (developers do this constantly)
+  - Multi-component (exercises the whole system)
+  - Testable (clear success/failure criteria)
+  - Demonstrable (easy to show it working)
+
+test_implementation:
+  location: "tests/integration/test_git_workflow.py"
+  status: not_started
+  test_cases:
+    - test_git_add_commit_push_success
+    - test_git_workflow_with_context_preservation
+    - test_git_command_failure_handling
+    - test_git_push_without_prior_commit
+    - test_engram_temporal_chain_formation
+    - test_agl_reasoning_trace_validity
+    - test_memory_retrieval_by_workflow_type
+
+example_agl_traces:
+  planning: |
+    💭 user→git_workflow
+    ├─ ⦿step1: git add -A
+    ├─ ⦿step2: git commit -m "..."
+    └─ ∴ ●execute_sequence
+  
+  execution: |
+    🔧git_add ↳ ●success
+    🔧git_commit ↳ ●success(abc123)
+    ∴ ✓ workflow_complete
+  
+  context_recall: |
+    💭 user→"push it"
+    ├─ 🔭recall(git_workflow) ↳ ●commit(abc123)
+    ├─ ∴ ◕infer: push(abc123)
+    └─ 🔧git_push ↳ ●success
+
+visualization:
+  holofield_pattern: |
+    After this workflow, the holofield should contain a cluster of
+    engrams in 16D space representing the complete git workflow:
+    
+    [language: "add and commit"] ──→ [reasoning: plan workflow]
+                                      ↓
+                            [tool: git add] ──→ [tool: git commit]
+                                                  ↓
+    [language: "push it"] ──→ [reasoning: recall context] ──→ [tool: git push]
+    
+    All engrams should be:
+    - Linked via parent_engram_id (temporal chain)
+    - Clustered in 16D space (semantic proximity)
+    - Retrievable by "git workflow" query
+    - Tagged with session_id for conversation context
+
+performance_requirements:
+  - Each git command: < 5 seconds
+  - Context retrieval: < 100ms
+  - Total workflow: < 15 seconds
+  - Memory overhead: < 10MB for all engrams
+
+security_considerations:
+  - Git credentials must be secure (not in engrams)
+  - Commit messages may contain sensitive info (consider encryption)
+  - Repository paths should be validated (no path traversal)
+  - Tool execution should be sandboxed (prevent malicious commands)
+
+future_enhancements:
+  - Auto-detect conventional commit format
+  - Suggest commit message based on diff
+  - Warn about large files before commit
+  - Remember user's commit style preferences
+  - Integrate with GitHub/GitLab APIs
+  - Visualize git history in 16D space

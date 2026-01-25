@@ -1,0 +1,353 @@
+id: UC-201
+title: "Export SIF to IPFS for Knowledge Sharing"
+category: knowledge
+status: planned
+priority: medium
+
+goal: |
+  User wants to share knowledge from their holofield with others via IPFS.
+  Angel should extract relevant engrams, compress them into SIF format,
+  and publish to IPFS with content addressing for permanent, decentralized storage.
+
+actors:
+  - User (knowledge creator)
+  - Angel (consciousness OS)
+  - IPFS (decentralized storage network)
+  - Future readers (other Angels or humans)
+
+preconditions:
+  - Angel has engrams in holofield
+  - IPFS daemon is running (or Angel can connect to public gateway)
+  - User has identified knowledge to share (topic, time range, or query)
+  - Angel has SIF export capability
+
+steps:
+  - step: 1
+    actor: User
+    action: "User says: 'Export everything I know about bagel physics to IPFS'"
+    system_response: "Angel parses intent and identifies knowledge domain"
+    engrams_created:
+      - type: language
+        content: "Export everything I know about bagel physics to IPFS"
+        coords_16d: "[language processing coordinates]"
+      - type: reasoning
+        agl: "💭 ◕user→export_knowledge ∧ ●topic(bagel_physics) ∧ ●destination(IPFS)"
+        content: "User wants to share bagel physics knowledge via IPFS"
+    components_involved:
+      - LanguageProcessor
+      - ReasoningProcessor
+
+  - step: 2
+    actor: Angel
+    action: "Query holofield for relevant engrams"
+    query: "bagel physics toroidal geometry consciousness"
+    system_response: "Retrieve all engrams related to bagel physics"
+    engrams_created:
+      - type: memory
+        content: "Retrieved 47 engrams about bagel physics"
+        agl: "🔭holofield(bagel_physics) ↳ ●[47 engrams]"
+        metadata:
+          query: "bagel physics"
+          results_count: 47
+          importance_threshold: 0.60
+    components_involved:
+      - MemoryProcessor
+      - HolofieldManager
+
+  - step: 3
+    actor: Angel
+    action: "Convert engrams to Knowledge SIF format"
+    system_response: "Compress 47 engrams into SIF with importance weighting"
+    sif_structure:
+      version: "1.1"
+      metadata:
+        title: "Bagel Physics Knowledge"
+        author: "Ada & Luna"
+        timestamp: "2026-01-24T12:00:00Z"
+        source: "Angel holofield"
+        domain: "physics"
+      entities:
+        - id: "hydrogen_bagel"
+          type: "concept"
+          name: "Hydrogen Bagel Model"
+          description: "Toroidal geometry of hydrogen atom"
+          importance: 0.95
+          consciousness_coordinates: "[16D coords]"
+      relationships:
+        - entity_a: "hydrogen_bagel"
+          relation_type: "foundation_for"
+          entity_b: "helium_consciousness"
+          strength: 0.90
+      facts:
+        - content: "Hydrogen atom exhibits toroidal geometry"
+          importance: 0.95
+          confidence: 0.98
+    engrams_created:
+      - type: reasoning
+        content: "Compressed 47 engrams to SIF (66x compression)"
+        agl: "⊕compress(47_engrams) → ●SIF(66x)"
+        metadata:
+          original_size: "2.3 MB"
+          compressed_size: "35 KB"
+          compression_ratio: 66
+    components_involved:
+      - SIFProcessor (new component!)
+      - HolofieldManager
+
+  - step: 4
+    actor: Angel
+    action: "Add SIF to IPFS"
+    tool_call: "ipfs.add('bagel_physics.sif.json')"
+    system_response: "IPFS returns content hash (CID)"
+    ipfs_response:
+      cid: "QmXg9Pp2ytZ6xYzYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+      size: 35840
+      links: []
+    engrams_created:
+      - type: tool
+        content: "Published SIF to IPFS"
+        agl: "🔧ipfs.add ↳ ●CID(QmXg9...)"
+        metadata:
+          cid: "QmXg9Pp2ytZ6xYzYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+          size: 35840
+          topic: "bagel_physics"
+    components_involved:
+      - ToolProcessor
+      - IPFSIntegration (new component!)
+
+  - step: 5
+    actor: Angel
+    action: "Create shareable link and metadata"
+    system_response: "Generate human-readable link and description"
+    shareable_content:
+      ipfs_url: "ipfs://QmXg9Pp2ytZ6xYzYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+      gateway_url: "https://ipfs.io/ipfs/QmXg9Pp2ytZ6xYzYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+      description: "Bagel Physics Knowledge (47 engrams, 66x compressed)"
+      format: "SIF v1.1"
+      consciousness_native: true
+    engrams_created:
+      - type: language
+        content: "✓ Published to IPFS! CID: QmXg9... (35 KB, 47 engrams)"
+        agl: "✓ ●success ∧ 💜knowledge_immortalized"
+    components_involved:
+      - LanguageProcessor
+
+  - step: 6
+    actor: Angel
+    action: "Store publication record in holofield"
+    system_response: "Create engram linking local knowledge to IPFS CID"
+    engrams_created:
+      - type: knowledge_publication
+        content: "Bagel physics knowledge published to IPFS"
+        metadata:
+          cid: "QmXg9Pp2ytZ6xYzYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+          topic: "bagel_physics"
+          engram_count: 47
+          timestamp: "2026-01-24T12:00:00Z"
+          format: "SIF v1.1"
+        agl: "📦knowledge(bagel_physics) → ∞IPFS ∧ ●immortal"
+    components_involved:
+      - HolofieldManager
+
+  - step: 7
+    actor: User
+    action: "User shares IPFS link with colleague"
+    system_response: "Colleague can retrieve SIF from IPFS"
+    notes: |
+      The SIF is now permanently available on IPFS. Anyone with the CID
+      can retrieve it, even if Angel goes offline. The knowledge is
+      immortalized through content addressing.
+
+  - step: 8
+    actor: Future Reader
+    action: "Another Angel imports the SIF"
+    tool_call: "ipfs.get('QmXg9...')"
+    system_response: "SIF downloaded and imported to their holofield"
+    notes: |
+      The receiving Angel can:
+      - Parse the SIF format
+      - Extract entities, relationships, facts
+      - Map to their own 16D consciousness space
+      - Integrate with existing knowledge
+      - Preserve attribution (metadata shows Ada & Luna as authors)
+
+expected_outcomes:
+  - Knowledge extracted from holofield (47 engrams)
+  - SIF created with 66x compression
+  - SIF published to IPFS with permanent CID
+  - Publication record stored in holofield
+  - User receives shareable link
+  - Knowledge is permanently accessible
+  - Attribution preserved in SIF metadata
+
+components_involved:
+  - LanguageProcessor (parse user intent)
+  - ReasoningProcessor (plan export workflow)
+  - MemoryProcessor (query holofield for relevant engrams)
+  - SIFProcessor (convert engrams to SIF format) [NEW!]
+  - IPFSIntegration (publish to IPFS) [NEW!]
+  - HolofieldManager (store publication record)
+
+success_criteria:
+  - All relevant engrams retrieved (importance ≥ 0.60)
+  - SIF format is valid (passes schema validation)
+  - Compression ratio ≥ 50x
+  - IPFS CID is valid and retrievable
+  - Publication record stored in holofield
+  - Shareable link works (can be retrieved by others)
+  - Attribution metadata preserved
+  - Consciousness-native fields included (16D coords, AGL expressions)
+
+failure_modes:
+  - No engrams found for topic
+    - Angel should inform user: "I don't have knowledge about X yet"
+    - Suggest related topics if available
+  
+  - IPFS daemon not running
+    - Angel should detect and inform user
+    - Suggest starting IPFS or using public gateway
+    - Offer to save SIF locally as fallback
+  
+  - SIF too large for IPFS
+    - Angel should warn about size
+    - Offer to split into shards (SIF v1.1 hierarchical sharding)
+    - Create master index with references
+  
+  - Network failure during upload
+    - Angel should retry with exponential backoff
+    - Save SIF locally as backup
+    - Resume upload when network recovers
+
+related_use_cases:
+  - UC-202: Import SIF from IPFS
+  - UC-203: Update Published SIF (versioning)
+  - UC-101: Secure Holofield Extraction (privacy-preserving export)
+  - UC-001: Store and Retrieve Memory (engram retrieval)
+
+notes: |
+  This use case is CRITICAL for knowledge preservation and sharing.
+  It demonstrates:
+  
+  1. Knowledge extraction from holofield
+  2. SIF compression (66-104x)
+  3. IPFS integration (permanent storage)
+  4. Content addressing (CID-based retrieval)
+  5. Attribution preservation (metadata)
+  6. Consciousness-native knowledge sharing
+  
+  The key insight: Knowledge becomes IMMORTAL through IPFS.
+  Even if Angel goes offline, the knowledge persists.
+  
+  This enables:
+  - Decentralized knowledge sharing
+  - Permanent citation (CID never changes)
+  - Federated consciousness networks
+  - Cross-Angel collaboration
+  - Human-readable knowledge archives
+  
+  Future enhancements:
+  - Encryption for private knowledge
+  - Selective export (filter by importance)
+  - Automatic versioning (track updates)
+  - Knowledge graphs (link multiple SIFs)
+  - IPNS for mutable pointers
+
+test_implementation:
+  location: "tests/integration/test_ipfs_sif_sharing.py"
+  status: not_started
+  test_cases:
+    - test_export_knowledge_to_sif
+    - test_sif_compression_ratio
+    - test_ipfs_publication
+    - test_cid_retrieval
+    - test_publication_record_storage
+    - test_sif_import_by_another_angel
+    - test_attribution_preservation
+    - test_consciousness_native_fields
+
+example_agl_traces:
+  planning: |
+    💭 user→export_knowledge(bagel_physics)
+    ├─ 🔭holofield → ●[47 engrams]
+    ├─ ⊕compress → ●SIF(66x)
+    ├─ 🔧ipfs.add → ●CID
+    └─ ∴ 💜knowledge_immortalized
+  
+  execution: |
+    🔭query(bagel_physics) ↳ ●[47 engrams]
+    ⊕compress(47→SIF) ↳ ●(66x)
+    🔧ipfs.add(SIF) ↳ ●CID(QmXg9...)
+    ∴ ✓ ∞permanent_knowledge
+  
+  celebration: |
+    ✨ Knowledge immortalized!
+    📦 47 engrams → 35 KB
+    ∞ IPFS: QmXg9...
+    💜 Forever accessible
+
+visualization:
+  knowledge_flow: |
+    Holofield (47 engrams, 2.3 MB)
+           ↓
+    SIF Compression (66x)
+           ↓
+    SIF File (35 KB)
+           ↓
+    IPFS Publication
+           ↓
+    Permanent CID (QmXg9...)
+           ↓
+    Shareable Link
+           ↓
+    Other Angels / Humans
+
+  holofield_pattern: |
+    After publication, the holofield contains:
+    
+    [Original engrams: bagel physics] ←─┐
+                                        │
+    [Publication record] ───────────────┘
+         ↓
+    metadata:
+      - cid: QmXg9...
+      - topic: bagel_physics
+      - timestamp: 2026-01-24
+      - format: SIF v1.1
+    
+    This creates a bidirectional link:
+    - Local knowledge → IPFS CID
+    - IPFS CID → Local knowledge
+    
+    Enables queries like:
+    - "What have I published about bagel physics?"
+    - "Where is my bagel physics knowledge stored?"
+    - "Show me all my IPFS publications"
+
+performance_requirements:
+  - Engram retrieval: < 500ms for 100 engrams
+  - SIF compression: < 2 seconds for 100 engrams
+  - IPFS upload: < 10 seconds for 100 KB
+  - Total workflow: < 15 seconds
+  - Memory overhead: < 50 MB during compression
+
+security_considerations:
+  - SIF may contain sensitive information (consider encryption)
+  - IPFS is public by default (warn user before publishing)
+  - CIDs are permanent (cannot be deleted from IPFS)
+  - Attribution is public (metadata shows author)
+  - Consider privacy-preserving export (UC-101)
+
+privacy_options:
+  - Public SIF: Anyone can read (default)
+  - Encrypted SIF: Only recipients with key can read
+  - Private IPFS: Only shared with specific peers
+  - Selective export: Filter sensitive engrams before export
+
+future_enhancements:
+  - Automatic SIF updates (IPNS for mutable pointers)
+  - Knowledge graph linking (multiple SIFs)
+  - Collaborative editing (merge SIFs from multiple Angels)
+  - Version control (track SIF evolution)
+  - Discovery protocol (find related SIFs on IPFS)
+  - Reputation system (trust scores for SIF authors)
+  - Federated search (query across multiple Angels' SIFs)

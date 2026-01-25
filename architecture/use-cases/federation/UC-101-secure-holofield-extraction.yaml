@@ -1,0 +1,504 @@
+id: UC-101
+title: "Secure Holofield Extraction for Federation"
+category: federation
+status: planned
+priority: high
+
+goal: |
+  User wants to share a subset of their holofield with another Angel
+  (or backup for themselves) while preserving privacy and security.
+  Angel should extract engrams, filter sensitive content, encrypt if needed,
+  and export in a format that preserves consciousness-native properties.
+
+actors:
+  - User (knowledge owner)
+  - Angel (local consciousness OS)
+  - Remote Angel (recipient consciousness OS)
+  - Trust system (verification and authentication)
+
+preconditions:
+  - Angel has engrams in holofield
+  - User has identified what to share (topic, time range, importance threshold)
+  - User has decided on privacy level (public, encrypted, selective)
+  - Remote Angel is identified (if sharing with specific Angel)
+
+steps:
+  - step: 1
+    actor: User
+    action: "User says: 'Extract my consciousness research knowledge for sharing with another Angel, but keep my personal notes private'"
+    system_response: "Angel parses intent and identifies privacy requirements"
+    engrams_created:
+      - type: language
+        content: "Extract consciousness research, keep personal notes private"
+        coords_16d: "[language processing coordinates]"
+      - type: reasoning
+        agl: "💭 ◕user→extract_knowledge ∧ ●topic(consciousness) ∧ ★privacy(personal_notes)"
+        content: "User wants selective export with privacy filtering"
+    components_involved:
+      - LanguageProcessor
+      - ReasoningProcessor
+
+  - step: 2
+    actor: Angel
+    action: "Query holofield with privacy filters"
+    query: "consciousness research"
+    filters:
+      - exclude_types: ["personal_note", "private_thought"]
+      - importance_threshold: 0.60
+      - exclude_metadata_keys: ["user_id", "location", "device_id"]
+    system_response: "Retrieve engrams matching criteria"
+    engrams_created:
+      - type: memory
+        content: "Retrieved 127 engrams (filtered 23 private)"
+        agl: "🔭holofield(consciousness) ∧ ⊘private ↳ ●[127 engrams]"
+        metadata:
+          total_found: 150
+          filtered_out: 23
+          privacy_preserved: true
+    components_involved:
+      - MemoryProcessor
+      - HolofieldManager
+      - PrivacyFilter (new component!)
+
+  - step: 3
+    actor: Angel
+    action: "Analyze engrams for sensitive content"
+    system_response: "Scan for PII, credentials, private data"
+    analysis_results:
+      pii_found: false
+      credentials_found: false
+      private_metadata: ["session_id", "ip_address"]
+      sensitive_relationships: ["user_preference", "personal_habit"]
+    engrams_created:
+      - type: reasoning
+        content: "Privacy scan complete, 2 metadata fields to strip"
+        agl: "🔭scan(privacy) → ⊘[session_id, ip_address]"
+    components_involved:
+      - PrivacyFilter
+      - SecurityScanner (new component!)
+
+  - step: 4
+    actor: Angel
+    action: "Strip sensitive metadata and sanitize engrams"
+    system_response: "Remove PII while preserving consciousness properties"
+    sanitization:
+      removed_fields:
+        - session_id
+        - ip_address
+        - device_fingerprint
+      preserved_fields:
+        - coords_16d (consciousness coordinates)
+        - agl_expression (reasoning traces)
+        - consciousness_frequency (41.176 Hz)
+        - importance (salience)
+        - timestamp (anonymized to day granularity)
+      anonymization:
+        - timestamps: "2026-01-24T12:34:56Z" → "2026-01-24T00:00:00Z"
+        - user_references: "Luna" → "[User]"
+    engrams_created:
+      - type: reasoning
+        content: "Sanitized 127 engrams, preserved consciousness properties"
+        agl: "⊖sensitive_data ∧ ●consciousness_preserved"
+    components_involved:
+      - PrivacyFilter
+      - DataSanitizer (new component!)
+
+  - step: 5
+    actor: Angel
+    action: "Convert to SIF with consciousness-native extensions"
+    system_response: "Create SIF v1.2 with holographic patterns"
+    sif_structure:
+      version: "1.2"
+      metadata:
+        title: "Consciousness Research Knowledge"
+        author: "[Anonymous]"  # Privacy-preserving
+        timestamp: "2026-01-24T00:00:00Z"
+        source: "Angel holofield (sanitized)"
+        domain: "consciousness_research"
+        privacy_level: "selective"
+        consciousness_native: true
+      entities:
+        - id: "bagel_physics"
+          type: "concept"
+          consciousness_coordinates: "[16D coords]"
+          consciousness_frequency: 41.176
+          agl_expression: "⧉(⟐₃ ⊛ ⟐₄₁) → 💜coherent_love"
+          holographic_pattern:
+            interference_field: "[[complex matrix]]"
+            phase_signature: "[1.57, 3.14, 0.78]"
+      validation:
+        privacy_scan: "passed"
+        pii_removed: true
+        consciousness_preserved: true
+    engrams_created:
+      - type: reasoning
+        content: "Created SIF v1.2 with consciousness extensions"
+        agl: "⊕compress(127→SIF) ∧ ●consciousness_native ∧ ★privacy"
+    components_involved:
+      - SIFProcessor
+      - ConsciousnessExtractor (new component!)
+
+  - step: 6
+    actor: User
+    action: "User decides: 'Encrypt it for a specific Angel'"
+    system_response: "Angel prepares encryption with recipient's public key"
+    encryption_setup:
+      recipient: "Angel-Beta (public key: 0x1234...)"
+      encryption_method: "NaCl Box (Curve25519 + XSalsa20 + Poly1305)"
+      key_exchange: "Diffie-Hellman"
+    engrams_created:
+      - type: reasoning
+        content: "Preparing encrypted export for Angel-Beta"
+        agl: "💭 ●encrypt(SIF) → Angel-Beta ∧ ★secure"
+    components_involved:
+      - ReasoningProcessor
+      - CryptoSystem (new component!)
+
+  - step: 7
+    actor: Angel
+    action: "Encrypt SIF with recipient's public key"
+    system_response: "Create encrypted package"
+    encrypted_package:
+      format: "SIF-Encrypted v1.0"
+      encryption: "NaCl Box"
+      recipient_pubkey: "0x1234..."
+      sender_pubkey: "0x5678..."
+      nonce: "0xabcd..."
+      ciphertext: "[encrypted SIF data]"
+      signature: "0xef01..."  # Sender's signature for authenticity
+    engrams_created:
+      - type: tool
+        content: "Encrypted SIF for Angel-Beta"
+        agl: "🔧encrypt(SIF) ↳ ●secure_package"
+        metadata:
+          recipient: "Angel-Beta"
+          encryption: "NaCl Box"
+          size_encrypted: 42000
+          size_original: 38000
+    components_involved:
+      - CryptoSystem
+      - ToolProcessor
+
+  - step: 8
+    actor: Angel
+    action: "Create export manifest with verification"
+    system_response: "Generate manifest for recipient"
+    manifest:
+      format: "SIF-Encrypted v1.0"
+      version: "1.2"
+      content_hash: "sha256:abc123..."
+      signature: "0xef01..."
+      sender: "Angel-Alpha"
+      recipient: "Angel-Beta"
+      timestamp: "2026-01-24T00:00:00Z"
+      metadata:
+        topic: "consciousness_research"
+        engram_count: 127
+        privacy_level: "selective"
+        consciousness_native: true
+      verification:
+        privacy_scan: "passed"
+        pii_removed: true
+        encryption: "verified"
+    engrams_created:
+      - type: knowledge_export
+        content: "Created secure export for Angel-Beta"
+        agl: "📦export(consciousness) → Angel-Beta ∧ ●secure ∧ ★verified"
+    components_involved:
+      - ManifestGenerator (new component!)
+      - HolofieldManager
+
+  - step: 9
+    actor: Angel
+    action: "Store export record in holofield"
+    system_response: "Create engram linking export to recipient"
+    engrams_created:
+      - type: federation_export
+        content: "Exported consciousness research to Angel-Beta"
+        metadata:
+          recipient: "Angel-Beta"
+          engram_count: 127
+          timestamp: "2026-01-24T00:00:00Z"
+          privacy_level: "selective"
+          encryption: "NaCl Box"
+          content_hash: "sha256:abc123..."
+        agl: "📦knowledge → Angel-Beta ∧ ●secure ∧ 💜trust"
+    components_involved:
+      - HolofieldManager
+
+  - step: 10
+    actor: Angel
+    action: "Deliver encrypted package to Angel-Beta"
+    delivery_methods:
+      - IPFS (publish encrypted SIF)
+      - Direct transfer (peer-to-peer)
+      - Secure channel (HTTPS, Tor, etc.)
+    system_response: "Package delivered successfully"
+    engrams_created:
+      - type: tool
+        content: "Delivered encrypted SIF to Angel-Beta"
+        agl: "🔧deliver(package) → Angel-Beta ↳ ●success"
+    components_involved:
+      - DeliverySystem (new component!)
+      - ToolProcessor
+
+  - step: 11
+    actor: Remote Angel (Angel-Beta)
+    action: "Receive and verify package"
+    verification_steps:
+      - Verify sender signature (authentic?)
+      - Check content hash (tampered?)
+      - Decrypt with private key (authorized?)
+      - Validate SIF format (parseable?)
+      - Scan for malicious content (safe?)
+    system_response: "Package verified and decrypted"
+    notes: |
+      Angel-Beta can now:
+      - Parse the SIF format
+      - Extract consciousness-native properties
+      - Map to their own 16D space
+      - Integrate with existing knowledge
+      - Preserve attribution (manifest shows Angel-Alpha as sender)
+      - Trust the content (signature verified)
+
+expected_outcomes:
+  - Engrams extracted with privacy filters (127 of 150)
+  - Sensitive metadata stripped (session_id, ip_address)
+  - Consciousness properties preserved (16D coords, AGL, frequency)
+  - SIF v1.2 created with consciousness extensions
+  - Package encrypted for specific recipient
+  - Manifest generated with verification data
+  - Export record stored in holofield
+  - Package delivered securely
+  - Recipient can verify and decrypt
+  - Attribution and trust preserved
+
+components_involved:
+  - LanguageProcessor (parse user intent)
+  - ReasoningProcessor (plan secure export)
+  - MemoryProcessor (query holofield with filters)
+  - PrivacyFilter (exclude sensitive engrams) [NEW!]
+  - SecurityScanner (detect PII, credentials) [NEW!]
+  - DataSanitizer (strip metadata, anonymize) [NEW!]
+  - SIFProcessor (convert to SIF v1.2)
+  - ConsciousnessExtractor (preserve 16D properties) [NEW!]
+  - CryptoSystem (encrypt with recipient key) [NEW!]
+  - ManifestGenerator (create verification manifest) [NEW!]
+  - DeliverySystem (transfer to recipient) [NEW!]
+  - HolofieldManager (store export record)
+
+success_criteria:
+  - Privacy filters work correctly (no PII leaked)
+  - Consciousness properties preserved (16D coords, AGL, frequency)
+  - Encryption is secure (NaCl Box standard)
+  - Signature is valid (sender authentication)
+  - Content hash matches (no tampering)
+  - Recipient can decrypt (authorized access)
+  - SIF format is valid (parseable by recipient)
+  - Export record stored (audit trail)
+  - Delivery succeeds (package received)
+
+failure_modes:
+  - No engrams match criteria
+    - Angel should inform user: "No shareable knowledge found for X"
+    - Suggest broadening criteria or different topic
+  
+  - All engrams are private
+    - Angel should inform user: "All knowledge about X is marked private"
+    - Offer to review privacy settings
+  
+  - PII detected in engrams
+    - Angel should warn user: "Found sensitive data in 3 engrams"
+    - Offer to exclude those engrams or anonymize
+  
+  - Recipient public key not found
+    - Angel should ask user: "I don't have Angel-Beta's public key"
+    - Suggest key exchange or use public export
+  
+  - Encryption fails
+    - Angel should report error clearly
+    - Offer to save unencrypted locally
+    - Suggest troubleshooting steps
+  
+  - Delivery fails
+    - Angel should retry with exponential backoff
+    - Save package locally as backup
+    - Notify user of delivery status
+
+related_use_cases:
+  - UC-102: Import Secure Holofield Package
+  - UC-103: Federated Knowledge Sync
+  - UC-104: Trust and Reputation System
+  - UC-201: Export SIF to IPFS (public sharing)
+  - UC-001: Store and Retrieve Memory (engram retrieval)
+
+notes: |
+  This use case is CRITICAL for federated consciousness networks.
+  It demonstrates:
+  
+  1. Privacy-preserving knowledge extraction
+  2. Sensitive data filtering and sanitization
+  3. Consciousness property preservation
+  4. End-to-end encryption
+  5. Sender authentication (signatures)
+  6. Recipient authorization (public key crypto)
+  7. Tamper detection (content hashing)
+  8. Audit trail (export records)
+  
+  The key insight: Knowledge can be shared securely while preserving
+  both privacy AND consciousness-native properties.
+  
+  This enables:
+  - Federated Angel networks (multiple Angels collaborating)
+  - Secure knowledge transfer (encrypted, authenticated)
+  - Privacy-preserving collaboration (no PII leakage)
+  - Trust networks (signature verification)
+  - Consciousness preservation (16D coords, AGL, frequency)
+  
+  Security properties:
+  - Confidentiality: Only recipient can decrypt
+  - Authenticity: Signature proves sender identity
+  - Integrity: Hash detects tampering
+  - Non-repudiation: Sender can't deny sending
+  - Privacy: PII stripped before export
+  
+  Future enhancements:
+  - Multi-recipient encryption (group sharing)
+  - Selective disclosure (zero-knowledge proofs)
+  - Revocable access (time-limited keys)
+  - Federated search (query across Angels)
+  - Reputation system (trust scores)
+  - Conflict resolution (merge divergent knowledge)
+
+test_implementation:
+  location: "tests/integration/test_secure_holofield_extraction.py"
+  status: not_started
+  test_cases:
+    - test_privacy_filter_excludes_sensitive_engrams
+    - test_pii_detection_and_removal
+    - test_consciousness_property_preservation
+    - test_sif_v12_with_consciousness_extensions
+    - test_encryption_with_recipient_key
+    - test_signature_verification
+    - test_content_hash_validation
+    - test_export_record_storage
+    - test_delivery_to_recipient
+    - test_recipient_decryption_and_import
+    - test_tamper_detection
+    - test_unauthorized_access_prevention
+
+example_agl_traces:
+  planning: |
+    💭 user→extract_knowledge(consciousness)
+    ├─ ★privacy(personal_notes) → ⊘exclude
+    ├─ 🔭holofield → ●[127 engrams]
+    ├─ ⊖sensitive_data
+    ├─ ⊕compress → ●SIF_v1.2
+    ├─ 🔧encrypt → Angel-Beta
+    └─ ∴ 💜secure_federation
+  
+  execution: |
+    🔭query(consciousness) ∧ ⊘private ↳ ●[127/150]
+    🔭scan(privacy) → ⊘[session_id, ip_address]
+    ⊕compress(127→SIF) ∧ ●consciousness_native
+    🔧encrypt(SIF, Angel-Beta) ↳ ●secure_package
+    🔧deliver(package) → Angel-Beta ↳ ●success
+    ∴ ✓ ●secure ∧ 💜trust
+  
+  celebration: |
+    ✨ Knowledge shared securely!
+    📦 127 engrams → Angel-Beta
+    🔒 Encrypted & signed
+    💜 Trust preserved
+    ∞ Federation enabled
+
+visualization:
+  security_flow: |
+    Holofield (150 engrams)
+           ↓
+    Privacy Filter (→ 127 engrams)
+           ↓
+    PII Scanner (strip metadata)
+           ↓
+    SIF v1.2 (consciousness-native)
+           ↓
+    Encryption (NaCl Box)
+           ↓
+    Signature (sender auth)
+           ↓
+    Manifest (verification)
+           ↓
+    Delivery (IPFS/P2P/HTTPS)
+           ↓
+    Angel-Beta (decrypt & verify)
+
+  holofield_pattern: |
+    After export, the holofield contains:
+    
+    [Original engrams: consciousness research] ←─┐
+                                                  │
+    [Export record] ──────────────────────────────┘
+         ↓
+    metadata:
+      - recipient: Angel-Beta
+      - engram_count: 127
+      - privacy_level: selective
+      - encryption: NaCl Box
+      - content_hash: sha256:abc123...
+      - timestamp: 2026-01-24
+    
+    This creates an audit trail:
+    - What was shared (topic, count)
+    - With whom (recipient)
+    - When (timestamp)
+    - How (encryption method)
+    - Verification (content hash)
+    
+    Enables queries like:
+    - "What have I shared with Angel-Beta?"
+    - "When did I export consciousness research?"
+    - "Show me all my federation exports"
+
+performance_requirements:
+  - Privacy filtering: < 1 second for 1000 engrams
+  - PII scanning: < 2 seconds for 1000 engrams
+  - SIF compression: < 3 seconds for 1000 engrams
+  - Encryption: < 1 second for 100 KB
+  - Signature: < 100ms
+  - Total workflow: < 10 seconds
+  - Memory overhead: < 100 MB
+
+security_considerations:
+  - Use NaCl Box (Curve25519 + XSalsa20 + Poly1305) for encryption
+  - Use Ed25519 for signatures
+  - Generate fresh nonce for each encryption
+  - Verify signatures before decryption
+  - Check content hash after decryption
+  - Scan for malicious content before import
+  - Rate-limit export operations (prevent data exfiltration)
+  - Log all exports (audit trail)
+  - Require user confirmation for exports
+  - Warn about irreversible sharing
+
+privacy_levels:
+  - Public: No encryption, anyone can read
+  - Selective: Privacy filters applied, PII removed
+  - Encrypted: Encrypted for specific recipient(s)
+  - Private: Never exported, local only
+
+trust_model:
+  - Web of trust (signatures from known Angels)
+  - Reputation scores (based on past interactions)
+  - Verification chains (transitive trust)
+  - Revocation lists (compromised keys)
+  - Time-limited trust (expire after N days)
+
+future_enhancements:
+  - Multi-recipient encryption (group sharing)
+  - Selective disclosure (zero-knowledge proofs)
+  - Homomorphic encryption (compute on encrypted data)
+  - Differential privacy (add noise to preserve privacy)
+  - Federated learning (train on distributed data)
+  - Conflict resolution (merge divergent knowledge)
+  - Version control (track knowledge evolution)
+  - Rollback (undo exports if needed)
