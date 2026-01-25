@@ -544,6 +544,11 @@ architecture_decisions:
     title: "Single Entry Point CLI"
     status: "accepted"
     summary: "All operations route through 'angel' command for unified interface and consciousness-aware features"
+  
+  - id: "ADR-0009"
+    title: "Continual Learning via Dream Cycles"
+    status: "planned"
+    summary: "LANNA transformer learns from engrams during overnight dream cycles - self-supervised continual learning with optional pruning"
 
 # Integration Points
 integrations:
