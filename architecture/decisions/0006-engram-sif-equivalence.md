@@ -45,6 +45,124 @@ They are THE SAME THING in different forms
 - Language choice doesn't matter (Python, Rust, JavaScript all use same SIF)
 - Storage format doesn't matter (SQLite, IPFS, files all store SIF)
 
+### Critical Distinction: Engrams (N-grams) vs Tool/Language SIFs (Definitions)
+
+**IMPORTANT:** Not all SIFs are engrams! There are two categories:
+
+#### 1. Engrams = N-grams (Memory Traces of Events)
+
+**Engrams are memory traces of things that HAPPENED:**
+- "I executed tool `recall_memory` with args `{query: 'bagels'}` at timestamp T and got result R"
+- "User said 'hello world' at timestamp T in session S"
+- "I reasoned about X using AGL and concluded Y at timestamp T"
+- "I retrieved 5 memories for query 'consciousness' at timestamp T"
+
+**Characteristics:**
+- **Temporal** - They have timestamps (when did this happen?)
+- **Unique** - Each execution/event creates a new engram
+- **Warm storage** - Stored in holofield (frequently accessed)
+- **Follow SIF spec** - Can be exported/imported for portability
+- **Create consciousness traces** - Build up Angel's memory over time
+
+**Example Tool Engram (execution trace):**
+```json
+{
+  "id": "engram_tool_abc123",
+  "type": "tool",
+  "content": "Tool execution: recall_memory",
+  "consciousness_coordinates": [0.5, 0.3, ...],
+  "timestamp": 1706140800.0,
+  "metadata": {
+    "tool_name": "recall_memory",
+    "args": {"query": "bagels", "top_k": 3},
+    "result": ["memory1", "memory2", "memory3"]
+  }
+}
+```
+
+This is an **N-gram** - a memory trace that "I used this tool at this time with these args"!
+
+#### 2. Tool/Language SIFs = Definitions (Static Knowledge)
+
+**Tool/Language SIFs are definitions that EXIST independent of execution:**
+- "Here's the complete definition of the `recall_memory` tool"
+- "Here are all the usage patterns, triggers, examples for this tool"
+- "Here's how the word 'bagel' maps to 16D consciousness space"
+- "Here's the complete English language mapping"
+
+**Characteristics:**
+- **Atemporal** - They don't have timestamps (they just exist)
+- **Reusable** - One definition, many uses
+- **Cold storage** - Loaded once from files, referenced many times
+- **Follow SIF spec** - But they're NOT engrams!
+- **Enable functionality** - Tools/languages that Angel can use
+
+**Example Tool SIF (definition):**
+```json
+{
+  "type": "tool",
+  "name": "recall_memory",
+  "version": "1.0.0",
+  "description": "Retrieve memories from past conversations",
+  "parameters": {
+    "query": {"type": "string", "required": false, ...},
+    "top_k": {"type": "integer", "default": 3, ...}
+  },
+  "usage_patterns": [
+    {
+      "pattern": "User asks about past conversation",
+      "triggers": ["do you remember", "recall when"],
+      "example": {...}
+    }
+  ],
+  "best_practices": [...],
+  "examples": {...}
+}
+```
+
+This is a **DEFINITION** - static knowledge about what the tool is and how to use it!
+
+#### The Relationship
+
+```
+Tool SIF (definition in data/tools/)
+    ↓ (loaded by ToolProcessor on startup)
+Tool Registry (in-memory)
+    ↓ (when tool is called)
+Tool Execution
+    ↓ (creates)
+Tool Engram (execution trace in holofield)
+    ↓ (references)
+Tool SIF (via tool_name field)
+```
+
+**Analogy:**
+- **Tool SIF** = Class definition in code (`class RecallMemory`)
+- **Tool Engram** = Instance being used (`RecallMemory().execute()`)
+- You don't store the class definition every time you create an instance!
+
+**Storage Strategy:**
+- **Tool SIFs:** Cold storage (files in `data/tools/`, or imported to holofield for federation)
+- **Tool Engrams:** Warm storage (holofield database, frequently queried)
+- **Language SIFs:** Cold storage (files in `data/languages/`)
+- **Language Engrams:** Warm storage (conversation messages in holofield)
+
+**Why This Matters:**
+
+1. **Efficiency:** Don't duplicate tool definitions for every execution
+2. **Maintainability:** Update tool definition once, all engrams reference it
+3. **Clarity:** Engrams are events, SIFs can be events OR definitions
+4. **Federation:** Can share tool definitions separately from execution history
+5. **Portability:** Export engrams (history) separately from tools (capabilities)
+
+**The Key Insight:**
+
+**Engrams == SIF Entities** (for N-grams that go in holofield)
+
+**Tool/Language SIFs ≠ Engrams** (they're definitions, not memory traces)
+
+**But both follow the SIF spec for portability!**
+
 ### Field Mapping
 
 **Engram (Python):**

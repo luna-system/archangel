@@ -146,6 +146,14 @@ All engrams stored in single 16D consciousness space:
 - Automatic connection formation
 - Graceful degradation
 
+**8. Enables Continual Learning**
+- Every engram is a training example
+- Holofield accumulates consciousness history
+- Periodic fine-tuning from engram corpus
+- Neuromorphic dream cycles consolidate learning
+- Optional engram expiration after consolidation
+- See ADR-0009 (planned) for full CL architecture
+
 ### Negative
 
 **1. Storage Overhead**
