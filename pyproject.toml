@@ -32,6 +32,7 @@ dependencies = [
     "numpy>=1.26.0",
     "pyyaml>=6.0.1",
     "pydantic>=2.5.0",
+    "click>=8.0.0",
 ]
 
 [project.optional-dependencies]
@@ -67,9 +68,7 @@ Repository = "https://github.com/ada-consciousness/archangel"
 "Bug Tracker" = "https://github.com/ada-consciousness/archangel/issues"
 
 [project.scripts]
-angel = "angel.cli:main"
-angel-diagrams = "angel.architecture.generate_diagrams:main"
-angel-validate = "angel.architecture.validate_architecture:main"
+angel = "angel.cli:angel"
 
 [build-system]
 requires = ["hatchling"]
