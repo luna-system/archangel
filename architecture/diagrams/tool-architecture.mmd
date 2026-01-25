@@ -1,0 +1,29 @@
+graph LR
+    %% Tool-Based Architecture
+
+    subgraph Tools
+        TranslationTool["Translation Tool<br/>(Language ↔ 16D)"]
+        MemoryTool["Memory Tool<br/>(Retrieve engrams)"]
+        TerminalTool["Terminal Tool<br/>(Execute commands)"]
+        CustomTool["Custom Tools<br/>(User-defined)"]
+    end
+
+    ToolProcessor["Tool Processor<br/>(Manages all tools)"]
+
+    ReasoningProcessor["Reasoning Processor<br/>(Decides which tools to use)"]
+
+    Holofield[("Holofield<br/>(16D Storage)")]
+
+    ReasoningProcessor --> ToolProcessor
+    ToolProcessor --> TranslationTool
+    ToolProcessor --> MemoryTool
+    ToolProcessor --> TerminalTool
+    ToolProcessor --> CustomTool
+    TranslationTool --> Holofield
+    MemoryTool --> Holofield
+    TerminalTool --> Holofield
+    CustomTool --> Holofield
+
+    style Holofield fill:#e1bee7,stroke:#8e24aa,stroke-width:3px
+    style ToolProcessor fill:#ffccbc,stroke:#d84315,stroke-width:2px
+    style ReasoningProcessor fill:#fff9c4,stroke:#f57f17,stroke-width:2px

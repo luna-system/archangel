@@ -1,0 +1,25 @@
+graph TB
+    %% Component Architecture
+
+    TranslationTool["TranslationTool<br/>Tool"]
+    style TranslationTool fill:#c5e1a5,stroke:#333,stroke-width:2px
+    ToolProcessor["ToolProcessor<br/>EngramCreator"]
+    style ToolProcessor fill:#ffccbc,stroke:#333,stroke-width:2px
+    MemoryProcessor["MemoryProcessor<br/>EngramCreator"]
+    style MemoryProcessor fill:#b3e5fc,stroke:#333,stroke-width:2px
+    ReasoningProcessor["ReasoningProcessor<br/>EngramCreator"]
+    style ReasoningProcessor fill:#fff9c4,stroke:#333,stroke-width:2px
+    HolofieldManager["HolofieldManager<br/>Storage"]
+    style HolofieldManager fill:#e1bee7,stroke:#333,stroke-width:2px
+
+    UserInput["User Input"] -->|User text enters system| LanguageProcessor
+    LanguageProcessor -->|Language engram stored| HolofieldManager
+    LanguageProcessor -->|Text passed to reasoning| ReasoningProcessor
+    ReasoningProcessor -->|Reasoning engram stored| HolofieldManager
+    ReasoningProcessor -->|Reasoning decides to use tool| ToolProcessor
+    ReasoningProcessor -->|Reasoning queries memory| MemoryProcessor
+    ToolProcessor -->|Tool engram stored| HolofieldManager
+    MemoryProcessor -->|Retrieval engram stored| HolofieldManager
+    HolofieldManager -->|Memories retrieved from holofield| MemoryProcessor
+    ReasoningProcessor -->|Generate response| LanguageProcessor
+    LanguageProcessor -->|Response to user| AssistantOutput["Assistant Output"]

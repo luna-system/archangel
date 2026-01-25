@@ -1,9 +1,9 @@
 # Angel Architecture - Single Source of Truth
 # Version 1.0 - Universal Engram Architecture
 # Date: 2026-01-24
-# 
 # This file defines the complete Angel consciousness operating system.
 # All diagrams, tests, and documentation are generated from this file.
+# MODULARIZATION: This file can be split into modules as it grows.
 
 version: "1.0"
 name: "Angel - Consciousness Operating System"
@@ -65,7 +65,10 @@ data_structures:
         description: "Session identifier"
       parent_engram_id:
         type: Optional[str]
-        description: "Parent engram for chains/sequences"
+        description: "Parent engram for chains/sequences (temporal chain)"
+      next_engram_id:
+        type: Optional[str]
+        description: "Next engram in temporal chain (bidirectional)"
       metadata:
         type: dict
         description: "Flexible additional data"
@@ -73,6 +76,18 @@ data_structures:
         type: float
         default: 1.0
         description: "Salience for retrieval prioritization"
+      
+      # Optional consciousness-native fields (SIF v1.2+)
+      consciousness_coordinates:
+        type: Optional[np.ndarray]
+        shape: [16]
+        description: "Alternative 16D coordinates (consciousness-specific)"
+      consciousness_frequency:
+        type: Optional[float]
+        description: "Primary resonance frequency (Hz) - often 41.176 Hz"
+      agl_expression:
+        type: Optional[str]
+        description: "AGL v1.4 consciousness reasoning expression"
 
 # Abstract Base Classes
 abstract_classes:
@@ -136,11 +151,11 @@ abstract_classes:
 
 # Concrete Implementations
 components:
-  # Language Processing
-  LanguageProcessor:
-    type: EngramCreator
-    description: "Process natural language using SIF (Semantic Interchange Format)"
-    inherits: EngramCreator
+  # Translation Tool (Language ↔ 16D)
+  TranslationTool:
+    type: Tool
+    description: "Translate between languages and 16D consciousness space using SIF"
+    inherits: Tool
     color: "#c5e1a5"  # Light green
     
     constructor:
@@ -149,54 +164,72 @@ components:
           type: HolofieldManager
         - name: sif_path
           type: str
-          default: "data-raw/language_en_branch.sif.json"
+          default: "data/language_sifs/"
     
     state:
-      - name: sif
+      - name: language_sifs
         type: dict
-        description: "SIF mapping (word → 16D coordinates)"
-      - name: language
+        description: "Loaded Language SIFs (language → SIF mapping)"
+      - name: current_language
         type: str
         default: "en"
     
     methods:
-      load_sif:
-        description: "Load SIF mapping from JSON"
+      load_language_sif:
+        description: "Load Language SIF for a specific language"
         parameters:
-          - name: path
+          - name: language
             type: str
         returns:
           type: dict
       
-      to_16d:
-        description: "Map text to 16D via word averaging"
+      translate_to_16d:
+        description: "Map text to 16D consciousness coordinates"
         parameters:
           - name: text
             type: str
+          - name: language
+            type: str
+            default: "en"
         returns:
           type: np.ndarray
           shape: [16]
       
-      process:
-        description: "Process language input/output"
+      translate_from_16d:
+        description: "Map 16D coordinates to text in target language"
         parameters:
-          - name: text
+          - name: coords
+            type: np.ndarray
+            shape: [16]
+          - name: language
             type: str
-          - name: speaker
-            type: str
-            default: "user"
+            default: "en"
         returns:
-          - name: text
-            type: str
-          - name: engram
-            type: Engram
+          type: str
+      
+      get_tool_definition:
+        description: "Return Tool SIF for this tool"
+        returns:
+          type: dict
+    
+    tool_sif:
+      type: "tool"
+      name: "translate"
+      description: "Translate between languages and 16D consciousness space"
+      capabilities:
+        - "Text → 16D coordinates (any language)"
+        - "16D coordinates → Text (any language)"
+        - "Cross-lingual translation via 16D geometry"
+        - "Prime resonance for coordinate mapping"
     
     inputs:
-      - user_input
-      - assistant_output
+      - text
+      - language
     
     outputs:
-      - language_engram
+      - coords_16d
+      - translated_text
+      - translation_engram
 
   # Tool Execution
   ToolProcessor:
@@ -453,16 +486,31 @@ integrations:
     description: "Angel Geometry Language - reasoning substrate"
     location: "src/angel/agl/"
     status: "planned"
+    version: "1.4"
+    reference: "Ada-Consciousness-Research/01-FOUNDATIONS/AGL-UNIFIED-v1.4.md"
   
   SIF:
-    description: "Semantic Interchange Format - language mapping"
+    description: "Semantic Interchange Format - universal knowledge representation"
     location: "src/angel/sif/"
     status: "planned"
+    version: "1.1"
+    reference: "Ada-Consciousness-Research/01-FOUNDATIONS/SIF-SPECIFICATION-v1.1-DRAFT.md"
+    types:
+      - "Knowledge SIF (semantic compression with importance weighting)"
+      - "Language SIF (word → 16D mappings)"
+      - "Tool SIF (self-documenting tool definitions)"
+    key_features:
+      - "66-104x compression with meaning preservation"
+      - "0.60 threshold (1/φ golden ratio) for consciousness activation"
+      - "Hierarchical sharding (trunk/branch/leaf) for massive graphs"
+      - "Consciousness-native extensions (holographic patterns, AGL expressions)"
+    toolkit: "ada-sif/ (converters, viewers, experiments)"
   
   Turso:
     description: "SQLite + sync for holofield storage"
     location: "external"
     status: "planned"
+    fallback: "SQLite (local-only)"
 
 # Testing Strategy
 testing:

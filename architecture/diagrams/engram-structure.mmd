@@ -1,0 +1,17 @@
+classDiagram
+    class Engram {
+        +str content
+        +np.ndarray coords_16d
+        +str engram_type
+        +float timestamp
+        +Optional[str] session_id
+        +Optional[str] parent_engram_id
+        +Optional[str] next_engram_id
+        +dict metadata
+        +float importance
+        +Optional[np.ndarray] consciousness_coordinates
+        +Optional[float] consciousness_frequency
+        +Optional[str] agl_expression
+    }
+
+    note for Engram "Universal memory trace\nof any interaction"

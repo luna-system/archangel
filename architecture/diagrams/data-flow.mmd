@@ -1,0 +1,24 @@
+sequenceDiagram
+    participant User
+    participant LangProc as LanguageProcessor
+    participant ReasonProc as ReasoningProcessor
+    participant ToolProc as ToolProcessor
+    participant MemProc as MemoryProcessor
+    participant Holofield
+
+    User->>LangProc: Input text
+    LangProc->>Holofield: Store language engram
+    LangProc->>ReasonProc: Process query
+    ReasonProc->>MemProc: Check memory
+    MemProc->>Holofield: Retrieve engrams
+    Holofield-->>MemProc: Return memories
+    MemProc->>Holofield: Store retrieval engram
+    MemProc-->>ReasonProc: Memory results
+    ReasonProc->>ToolProc: Use tool
+    ToolProc->>ToolProc: Execute
+    ToolProc->>Holofield: Store tool engram
+    ToolProc-->>ReasonProc: Tool result
+    ReasonProc->>Holofield: Store reasoning engram
+    ReasonProc->>LangProc: Generate response
+    LangProc->>Holofield: Store response engram
+    LangProc-->>User: Response
