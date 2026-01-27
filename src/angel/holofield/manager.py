@@ -324,7 +324,9 @@ class HolofieldManager:
         metadata: Optional[Dict[str, Any]] = None
     ) -> str:
         """
-        Store connection between engrams (ADR-0012).
+        Store or update connection between engrams (ADR-0012).
+        
+        Uses UPSERT to update existing connections.
         
         Args:
             source_id: Source engram ID
@@ -339,22 +341,45 @@ class HolofieldManager:
         import uuid
         from datetime import datetime
         
-        connection_id = str(uuid.uuid4())
         timestamp = datetime.now().isoformat()
         
-        self.conn.execute("""
-            INSERT INTO engram_connections
-            (id, source_id, target_id, connection_type, weight, timestamp, metadata)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, [
-            connection_id,
-            source_id,
-            target_id,
-            connection_type,
-            weight,
-            timestamp,
-            json.dumps(metadata) if metadata else None
-        ])
+        # Check if connection already exists
+        cursor = self.conn.execute("""
+            SELECT id FROM engram_connections
+            WHERE source_id = ? AND target_id = ? AND connection_type = ?
+        """, [source_id, target_id, connection_type])
+        
+        existing = cursor.fetchone()
+        
+        if existing:
+            # Update existing connection
+            connection_id = existing["id"]
+            self.conn.execute("""
+                UPDATE engram_connections
+                SET weight = ?, timestamp = ?, metadata = ?
+                WHERE id = ?
+            """, [
+                weight,
+                timestamp,
+                json.dumps(metadata) if metadata else None,
+                connection_id
+            ])
+        else:
+            # Insert new connection
+            connection_id = str(uuid.uuid4())
+            self.conn.execute("""
+                INSERT INTO engram_connections
+                (id, source_id, target_id, connection_type, weight, timestamp, metadata)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, [
+                connection_id,
+                source_id,
+                target_id,
+                connection_type,
+                weight,
+                timestamp,
+                json.dumps(metadata) if metadata else None
+            ])
         
         self.conn.commit()
         return connection_id
