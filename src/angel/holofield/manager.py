@@ -71,6 +71,38 @@ class HolofieldManager:
             ON engrams(timestamp)
         """)
         
+        # Connections table for Hebbian edges (ADR-0012)
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS engram_connections (
+                id TEXT PRIMARY KEY,
+                source_id TEXT NOT NULL,
+                target_id TEXT NOT NULL,
+                connection_type TEXT NOT NULL,
+                weight REAL NOT NULL,
+                timestamp TEXT NOT NULL,
+                metadata TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (source_id) REFERENCES engrams(id),
+                FOREIGN KEY (target_id) REFERENCES engrams(id)
+            )
+        """)
+        
+        # Indexes for fast connection queries
+        self.conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_connection_source 
+            ON engram_connections(source_id)
+        """)
+        
+        self.conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_connection_target 
+            ON engram_connections(target_id)
+        """)
+        
+        self.conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_connection_type 
+            ON engram_connections(connection_type)
+        """)
+        
         self.conn.commit()
     
     def store(self, engram: Engram) -> str:
@@ -282,6 +314,127 @@ class HolofieldManager:
             "metadata": json.loads(row["metadata"]) if row["metadata"] else {},
             "timestamp": row["timestamp"]
         })
+    
+    def store_connection(
+        self,
+        source_id: str,
+        target_id: str,
+        connection_type: str,
+        weight: float,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """
+        Store connection between engrams (ADR-0012).
+        
+        Args:
+            source_id: Source engram ID
+            target_id: Target engram ID
+            connection_type: Type of connection (HEBBIAN, SEMANTIC, etc.)
+            weight: Connection weight [0.0, 1.0]
+            metadata: Optional metadata
+            
+        Returns:
+            Connection ID
+        """
+        import uuid
+        from datetime import datetime
+        
+        connection_id = str(uuid.uuid4())
+        timestamp = datetime.now().isoformat()
+        
+        self.conn.execute("""
+            INSERT INTO engram_connections
+            (id, source_id, target_id, connection_type, weight, timestamp, metadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, [
+            connection_id,
+            source_id,
+            target_id,
+            connection_type,
+            weight,
+            timestamp,
+            json.dumps(metadata) if metadata else None
+        ])
+        
+        self.conn.commit()
+        return connection_id
+    
+    def get_connections(
+        self,
+        engram_id: str,
+        connection_type: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get all connections for an engram.
+        
+        Args:
+            engram_id: Engram ID
+            connection_type: Optional filter by connection type
+            
+        Returns:
+            List of connection dicts
+        """
+        query = """
+            SELECT * FROM engram_connections 
+            WHERE source_id = ? OR target_id = ?
+        """
+        params = [engram_id, engram_id]
+        
+        if connection_type:
+            query += " AND connection_type = ?"
+            params.append(connection_type)
+        
+        cursor = self.conn.execute(query, params)
+        
+        connections = []
+        for row in cursor:
+            connections.append({
+                "id": row["id"],
+                "source_id": row["source_id"],
+                "target_id": row["target_id"],
+                "connection_type": row["connection_type"],
+                "weight": row["weight"],
+                "timestamp": row["timestamp"],
+                "metadata": json.loads(row["metadata"]) if row["metadata"] else {}
+            })
+        
+        return connections
+    
+    def get_all_connections(
+        self,
+        connection_type: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get all connections in holofield.
+        
+        Args:
+            connection_type: Optional filter by connection type
+            
+        Returns:
+            List of connection dicts
+        """
+        query = "SELECT * FROM engram_connections"
+        params = []
+        
+        if connection_type:
+            query += " WHERE connection_type = ?"
+            params.append(connection_type)
+        
+        cursor = self.conn.execute(query, params)
+        
+        connections = []
+        for row in cursor:
+            connections.append({
+                "id": row["id"],
+                "source_id": row["source_id"],
+                "target_id": row["target_id"],
+                "connection_type": row["connection_type"],
+                "weight": row["weight"],
+                "timestamp": row["timestamp"],
+                "metadata": json.loads(row["metadata"]) if row["metadata"] else {}
+            })
+        
+        return connections
     
     def close(self):
         """Close database connection"""
