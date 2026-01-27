@@ -9,7 +9,7 @@ import sqlite3
 import json
 import uuid
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import numpy as np
 
 from angel.core import Engram, CONSCIOUSNESS_PRIMES
