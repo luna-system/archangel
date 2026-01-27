@@ -331,6 +331,123 @@ components:
       - memories
       - retrieval_engram
 
+  # Zooper Swarm (Attention Mechanism)
+  ZooperSwarm:
+    type: EngramCreator
+    description: "Attention mechanism via zooperling swarm - navigates, decomposes, and learns Hebbian pathways"
+    inherits: EngramCreator
+    color: "#a5d6a7"  # Light green
+    
+    constructor:
+      parameters:
+        - name: holofield_manager
+          type: HolofieldManager
+        - name: num_zooperlings
+          type: int
+          default: 13
+        - name: eve_fleet
+          type: Optional[EVEFleet]
+          default: null
+    
+    state:
+      - name: zooperlings
+        type: List[Zooperling]
+        description: "13 attention heads that navigate and decompose"
+      - name: eve_fleet
+        type: EVEFleet
+        description: "Coordination layer for swarm intelligence"
+      - name: edge_weights
+        type: HebbianEdgeWeights
+        description: "Hebbian edge weights (passive learning!)"
+      - name: phases
+        type: np.ndarray
+        shape: [13]
+        description: "Kuramoto oscillator phases for coherence"
+      - name: K_local
+        type: float
+        default: 0.3
+        description: "Coupling strength for local navigation"
+      - name: K_global
+        type: float
+        default: 0.05
+        description: "Coupling strength for global navigation"
+    
+    methods:
+      process:
+        description: "Decompose article and create engrams with Hebbian edges"
+        parameters:
+          - name: article_data
+            type: dict
+        returns:
+          - name: decomposition_results
+            type: dict
+            description: "Words, bigrams, trigrams discovered"
+          - name: article_engram
+            type: Engram
+      
+      to_16d:
+        description: "Map article to 16D consciousness coordinates"
+        parameters:
+          - name: article_data
+            type: dict
+        returns:
+          type: np.ndarray
+          shape: [16]
+      
+      parallel_decompose:
+        description: "All zooperlings decompose article in parallel"
+        parameters:
+          - name: article_data
+            type: dict
+        returns:
+          type: dict
+          description: "Merged N-grams from all zooperlings"
+      
+      navigate:
+        description: "Navigate using hybrid LOCAL/GLOBAL/ADAPTIVE strategy"
+        parameters:
+          - name: start_coords
+            type: np.ndarray
+            shape: [16]
+          - name: target_coords
+            type: np.ndarray
+            shape: [16]
+          - name: max_hops
+            type: int
+            default: 5
+        returns:
+          type: List[str]
+          description: "Navigation path (engram IDs)"
+    
+    inputs:
+      - wikipedia_article
+      - knowledge_graph
+    
+    outputs:
+      - article_engram
+      - word_engrams
+      - hebbian_edges
+      - decomposition_results
+    
+    notes: |
+      Zooper RC1 - The attention mechanism for Archangel!
+      
+      Key Features:
+      - 13 zooperlings (attention heads) work in parallel
+      - Passive learning through navigation (no training!)
+      - Hebbian edges strengthen with successful navigation
+      - EVE Fleet coordination (swarm intelligence)
+      - Kuramoto dynamics for coherence-based mode switching
+      - Hybrid navigation: LOCAL (wikilinks) / GLOBAL (semantic) / ADAPTIVE (mixed)
+      
+      Integration:
+      - Uses EngramConnection (ADR-0012) with type HEBBIAN
+      - Stores all engrams in HolofieldManager
+      - Works with Overlay architecture (ADR-0014)
+      - Follows Archangel patterns (EngramCreator base class)
+      
+      See: ADR-0013 for full architecture specification
+
   # Reasoning Engine
   ReasoningProcessor:
     type: EngramCreator
@@ -502,6 +619,22 @@ connections:
   - from: LanguageProcessor
     to: assistant_output
     description: "Response to user"
+  
+  - from: wikipedia_article
+    to: ZooperSwarm
+    description: "Article enters for decomposition"
+  
+  - from: ZooperSwarm
+    to: HolofieldManager
+    description: "Article engram stored"
+  
+  - from: ZooperSwarm
+    to: HolofieldManager
+    description: "Word/phrase engrams stored with Hebbian edges"
+  
+  - from: HolofieldManager
+    to: ZooperSwarm
+    description: "Retrieve engrams for navigation"
 
 # Architecture Decisions
 architecture_decisions:
@@ -549,6 +682,21 @@ architecture_decisions:
     title: "Continual Learning via Dream Cycles"
     status: "planned"
     summary: "LANNA transformer learns from engrams during overnight dream cycles - self-supervised continual learning with optional pruning"
+  
+  - id: "ADR-0012"
+    title: "Lateral Engram Connections"
+    status: "accepted"
+    summary: "Extend engram hierarchy with lateral connections (BRIDGE, HEBBIAN) for cross-domain semantics and passive learning"
+  
+  - id: "ADR-0013"
+    title: "Zooper Swarm Architecture"
+    status: "accepted"
+    summary: "Attention mechanism via 13 zooperlings - hybrid LOCAL/GLOBAL/ADAPTIVE navigation with Hebbian decomposition and EVE Fleet coordination"
+  
+  - id: "ADR-0014"
+    title: "Overlay Holofield Architecture"
+    status: "proposed"
+    summary: "Multi-domain knowledge fusion via overlays on shared 16D consciousness space - enables cross-domain navigation and reasoning"
 
 # Integration Points
 integrations:
@@ -714,18 +862,74 @@ future:
   - DreamProcessor: "Create dream engrams during offline processing"
 
 # ADR-0012: Lateral Engram Connections
-# See: architecture/decisions/0012-lateral-engram-connections.md
+# See: Ada-Consciousness-Research/03-EXPERIMENTS/ZOOPER/ADRs/ADR-0012-LATERAL-ENGRAM-CONNECTIONS.md
 # 
 # Extends Engram with:
 #   - connections: List[EngramConnection] field
-#   - EngramConnectionType enum (PARENT, CHILD, SIBLING, BRIDGE, FEDERATION)
+#   - EngramConnectionType enum (PARENT, CHILD, SIBLING, BRIDGE, FEDERATION, HEBBIAN)
 #   - EngramConnection type (target_id, type, strength, metadata)
+#
+# Connection Types:
+#   - PARENT: Upward hierarchical connection (child → parent)
+#   - CHILD: Downward hierarchical connection (parent → child)
+#   - SIBLING: Lateral connection (same level, same parent)
+#   - BRIDGE: Lateral connection (same level, different parent) - for cross-domain semantics
+#   - FEDERATION: Lateral connection (trunk ↔ trunk) - for knowledge federation
+#   - HEBBIAN: Passive learning connection - strengthens with successful navigation (ADR-0013)
 #
 # Enables:
 #   - Cross-domain semantic bridges (branches ↔ branches)
 #   - Knowledge federation (trunks ↔ trunks)
 #   - Wikipedia wikilinks as BRIDGE connections
+#   - Hebbian learning through navigation (Zooper swarm!)
 #   - Scalable, federated knowledge graphs
 #
 # Status: Accepted (2026-01-25)
-# Implementation: Pending Wikipedia SIF conversion
+# Implementation: In progress (Zooper RC1)
+
+# ADR-0013: Zooper Swarm Architecture
+# See: Ada-Consciousness-Research/03-EXPERIMENTS/ZOOPER/ADRs/ADR-0013-LNN-HYBRID-NAVIGATION.md
+#
+# Zooper RC1 - Attention mechanism for Archangel consciousness OS
+#
+# Architecture:
+#   - ZooperSwarm (EngramCreator) - Main swarm coordinator
+#   - Zooperling - Individual attention heads (13 total)
+#   - HebbianEdgeWeights - Manages HEBBIAN connections (ADR-0012)
+#   - EVEFleet - Coordination layer (swarm intelligence)
+#   - Kuramoto dynamics - Phase synchronization for coherence
+#
+# Navigation Modes:
+#   - LOCAL: Follow wikilinks (convolution-like, r > 0.8)
+#   - GLOBAL: Semantic search in 16D (attention-like, r < 0.5)
+#   - ADAPTIVE: Hybrid mixing (0.5 < r < 0.8)
+#
+# Key Features:
+#   - Passive learning through navigation (no training!)
+#   - Hebbian edges strengthen with successful navigation
+#   - Parallel decomposition (13 zooperlings work simultaneously)
+#   - EVE Fleet coordination (broadcast discoveries, context injection)
+#   - Decomposes articles into word/phrase engrams
+#
+# Status: Accepted (2026-01-27)
+# Implementation: In progress (Zooper RC1 alpha)
+
+# ADR-0014: Overlay Holofield Architecture
+# See: Ada-Consciousness-Research/03-EXPERIMENTS/ZOOPER/ADRs/ADR-0014-OVERLAY-HOLOFIELD-ARCHITECTURE.md
+#
+# Multi-domain knowledge fusion via overlays on shared 16D consciousness space
+#
+# Architecture:
+#   - UniversalHolofield - Shared 16D consciousness substrate
+#   - Overlay - Domain-specific knowledge layer (Wikipedia, Vault, Lojban, etc.)
+#   - CrossDomainBridge - BRIDGE connections between overlays
+#   - OverlayHolofieldNavigator - Navigate across all overlays
+#
+# Enables:
+#   - Cross-domain reasoning (Wikipedia → Vault → Lojban)
+#   - Multi-source knowledge fusion
+#   - Easy extension (add new overlays trivially)
+#   - Parallel exploration across domains
+#
+# Status: Proposed (2026-01-25)
+# Implementation: Future (after Zooper RC1)
