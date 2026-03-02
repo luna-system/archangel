@@ -306,10 +306,15 @@ class ZooperSwarm(EngramCreator):
                 decomposition, engram_id, article_coords, raw_content=content
             )
             
-            # Create Hebbian edges
+            # Create Hebbian edges for words
             self._create_hebbian_edges(engram_id, word_engrams)
             
-            new_engram_count += len(word_engrams)
+            # ALSO create bigram engrams for richer linguistic structure!
+            bigram_engrams = self._create_bigram_engrams(
+                engram_id, article_coords, raw_content=content
+            )
+            
+            new_engram_count += len(word_engrams) + len(bigram_engrams)
         
         return new_engram_count
 
@@ -400,6 +405,109 @@ class ZooperSwarm(EngramCreator):
         cursor = self.holofield_manager.conn.execute(
             "SELECT id FROM engrams WHERE content = ? AND engram_type = 'language' LIMIT 1",
             (word,)
+        )
+        row = cursor.fetchone()
+        return row['id'] if row else None
+    
+    def _create_bigram_engrams(
+        self,
+        article_id: str,
+        article_coords: np.ndarray,
+        raw_content: str
+    ) -> List[str]:
+        """
+        Create bigram (2-word) engrams for richer linguistic structure.
+        
+        Bigrams capture multi-word concepts like "julian calendar",
+        "current year", "first month" that improve generation coherence.
+        
+        Args:
+            article_id: Parent article engram ID
+            article_coords: Article's 16D coordinates
+            raw_content: Raw article text for frequency counting
+            
+        Returns:
+            List of created bigram engram IDs
+        """
+        import re
+        from collections import Counter
+        
+        bigram_engram_ids = []
+        
+        # Get raw words
+        words = re.findall(r'\b\w+\b', raw_content.lower())
+        if len(words) < 2:
+            return bigram_engram_ids
+        
+        # Build bigrams from raw text
+        raw_bigrams = [(words[i], words[i+1]) for i in range(len(words)-1)]
+        bigram_freq = Counter(raw_bigrams)
+        
+        # Stop words to filter
+        stop_words = {'the', 'a', 'an', 'of', 'in', 'to', 'and', 'is', 'it', 
+                      'for', 'on', 'at', 'by', 'with', 'from', 'as', 'are',
+                      'was', 'were', 'be', 'been', 'have', 'has', 'had', 'this'}
+        
+        # Process top bigrams
+        for (word1, word2), freq in bigram_freq.most_common(20):
+            # Quality filters
+            if freq < 2:  # Must appear multiple times
+                continue
+            if len(word1) < 2 or len(word2) < 2:  # Min word length
+                continue
+            if word1 in stop_words and word2 in stop_words:  # No stop-word pairs
+                continue
+            if word1.isdigit() and word2.isdigit():  # No pure numbers
+                continue
+            
+            bigram_text = f"{word1} {word2}"
+            
+            # Deduplication: Check if exists
+            existing_id = self._find_bigram_engram(bigram_text)
+            
+            if existing_id:
+                bigram_engram_ids.append(existing_id)
+            else:
+                # Create new bigram engram
+                bigram_engram = self.create_engram(
+                    content=bigram_text,
+                    data={
+                        "bigram": bigram_text,
+                        "word1": word1,
+                        "word2": word2,
+                        "parent_article": article_id
+                    },
+                    engram_type="bigram",
+                    metadata={
+                        "bigram": bigram_text,
+                        "word1": word1,
+                        "word2": word2,
+                        "source": "zooper_bigram_decomposition",
+                        "parent_article": article_id,
+                        "frequency": freq,
+                    },
+                )
+                bigram_id = self.store_engram(bigram_engram)
+                bigram_engram_ids.append(bigram_id)
+            
+            # Link to component words (if they exist)
+            for word in [word1, word2]:
+                word_id = self._find_word_engram(word)
+                if word_id:
+                    # Bigram connects to component word
+                    self.edge_weights.strengthen(existing_id or bigram_id, word_id, amount=0.25)
+        
+        # Create Hebbian edges from article to bigrams
+        for bigram_id in bigram_engram_ids:
+            self.edge_weights.strengthen(article_id, bigram_id, amount=0.2)
+        
+        return bigram_engram_ids
+    
+    def _find_bigram_engram(self, bigram_text: str) -> Optional[str]:
+        """Find existing bigram engram by content."""
+        cursor = self.holofield_manager.conn.execute(
+            "SELECT id FROM engrams WHERE content = ? AND engram_type = 'bigram' LIMIT 1",
+            (bigram_text,)
         )
         row = cursor.fetchone()
         return row['id'] if row else None
