@@ -314,7 +314,12 @@ class ZooperSwarm(EngramCreator):
                 engram_id, article_coords, raw_content=content
             )
             
-            new_engram_count += len(word_engrams) + len(bigram_engrams)
+            # AND trigram engrams for even richer phrases!
+            trigram_engrams = self._create_trigram_engrams(
+                engram_id, article_coords, raw_content=content
+            )
+            
+            new_engram_count += len(word_engrams) + len(bigram_engrams) + len(trigram_engrams)
         
         return new_engram_count
 
@@ -508,6 +513,132 @@ class ZooperSwarm(EngramCreator):
         cursor = self.holofield_manager.conn.execute(
             "SELECT id FROM engrams WHERE content = ? AND engram_type = 'bigram' LIMIT 1",
             (bigram_text,)
+        )
+        row = cursor.fetchone()
+        return row['id'] if row else None
+
+    def _create_trigram_engrams(
+        self,
+        article_id: str,
+        article_coords: np.ndarray,
+        raw_content: str
+    ) -> List[str]:
+        """
+        Create trigram (3-word) engrams for even richer linguistic structure.
+
+        Trigrams capture complex phrases like "julian calendar system",
+        "united states of", "republic of china" that dramatically
+        improve generation coherence.
+
+        ADR-0020: Higher quality bar than bigrams (freq >= 3).
+
+        Args:
+            article_id: Parent article engram ID
+            article_coords: Article's 16D coordinates
+            raw_content: Raw article text for frequency counting
+
+        Returns:
+            List of created trigram engram IDs
+        """
+        import re
+        from collections import Counter
+
+        trigram_engram_ids = []
+
+        # Get raw words
+        words = re.findall(r'\b\w+\b', raw_content.lower())
+        if len(words) < 3:
+            return trigram_engram_ids
+
+        # Build trigrams from raw text
+        raw_trigrams = [
+            (words[i], words[i+1], words[i+2])
+            for i in range(len(words) - 2)
+        ]
+        trigram_freq = Counter(raw_trigrams)
+
+        # Stop words to filter
+        stop_words = {'the', 'a', 'an', 'of', 'in', 'to', 'and', 'is', 'it',
+                      'for', 'on', 'at', 'by', 'with', 'from', 'as', 'are',
+                      'was', 'were', 'be', 'been', 'have', 'has', 'had', 'this'}
+
+        # Process top trigrams (stricter limits than bigrams)
+        for (word1, word2, word3), freq in trigram_freq.most_common(10):
+            # Quality filters - HIGHER BAR than bigrams
+            if freq < 3:  # Must appear at least 3 times
+                continue
+            if len(word1) < 2 or len(word2) < 2 or len(word3) < 2:
+                continue
+
+            # Don't create trigrams that are mostly stop words
+            stop_count = sum(1 for w in [word1, word2, word3] if w in stop_words)
+            if stop_count >= 2:  # Allow at most 1 stop word
+                continue
+
+            # Not purely numeric
+            if word1.isdigit() and word2.isdigit() and word3.isdigit():
+                continue
+
+            trigram_text = f"{word1} {word2} {word3}"
+
+            # Deduplication: Check if exists
+            existing_id = self._find_trigram_engram(trigram_text)
+
+            if existing_id:
+                trigram_engram_ids.append(existing_id)
+            else:
+                # Create new trigram engram
+                trigram_engram = self.create_engram(
+                    content=trigram_text,
+                    data={
+                        "trigram": trigram_text,
+                        "word1": word1,
+                        "word2": word2,
+                        "word3": word3,
+                        "parent_article": article_id
+                    },
+                    engram_type="trigram",
+                    metadata={
+                        "trigram": trigram_text,
+                        "word1": word1,
+                        "word2": word2,
+                        "word3": word3,
+                        "source": "zooper_trigram_decomposition",
+                        "parent_article": article_id,
+                        "frequency": freq,
+                    },
+                )
+                trigram_id = self.store_engram(trigram_engram)
+                trigram_engram_ids.append(trigram_id)
+
+            # Link to component words and bigrams
+            for word in [word1, word2, word3]:
+                word_id = self._find_word_engram(word)
+                if word_id:
+                    self.edge_weights.strengthen(
+                        existing_id or trigram_id, word_id, amount=0.2
+                    )
+
+            # Link to component bigrams
+            for bigram_words in [(word1, word2), (word2, word3)]:
+                bigram_text = f"{bigram_words[0]} {bigram_words[1]}"
+                bigram_id = self._find_bigram_engram(bigram_text)
+                if bigram_id:
+                    self.edge_weights.strengthen(
+                        existing_id or trigram_id, bigram_id, amount=0.3
+                    )
+
+        # Create Hebbian edges from article to trigrams
+        for trigram_id in trigram_engram_ids:
+            self.edge_weights.strengthen(article_id, trigram_id, amount=0.25)
+
+        return trigram_engram_ids
+
+    def _find_trigram_engram(self, trigram_text: str) -> Optional[str]:
+        """Find existing trigram engram by content."""
+        cursor = self.holofield_manager.conn.execute(
+            "SELECT id FROM engrams WHERE content = ? AND engram_type = 'trigram' LIMIT 1",
+            (trigram_text,)
         )
         row = cursor.fetchone()
         return row['id'] if row else None
