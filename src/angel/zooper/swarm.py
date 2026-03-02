@@ -296,23 +296,196 @@ class ZooperSwarm(EngramCreator):
         self, start_coords: np.ndarray, target_coords: np.ndarray, max_hops: int
     ) -> List[str]:
         """
-        LOCAL navigation: Follow wikilinks (convolution-like).
-
-        TODO: Implement wikilink following
+        LOCAL navigation: Follow BRIDGE connections (convolution-like).
+        
+        Strategy: Start at engram nearest to start_coords, follow BRIDGE
+        connections to neighbors, check if approaching target.
+        
+        Args:
+            start_coords: Starting 16D coordinates
+            target_coords: Target 16D coordinates
+            max_hops: Maximum navigation steps
+            
+        Returns:
+            List of engram IDs forming path (empty if no path found)
         """
-        # Placeholder for now
-        return []
+        import json
+        
+        # Find starting engram (nearest to start_coords)
+        cursor = self.holofield_manager.conn.execute("""
+            SELECT id, coords_16d FROM engrams
+            ORDER BY (
+                (json_extract(coords_16d, '$[0]') - ?) * (json_extract(coords_16d, '$[0]') - ?) +
+                (json_extract(coords_16d, '$[1]') - ?) * (json_extract(coords_16d, '$[1]') - ?)
+            )
+            LIMIT 1
+        """, [float(start_coords[0]), float(start_coords[0]), 
+              float(start_coords[1]), float(start_coords[1])])
+        
+        start_row = cursor.fetchone()
+        if not start_row:
+            return []
+        
+        current_id = start_row['id']
+        path = [current_id]
+        visited = {current_id}
+        
+        for hop in range(max_hops):
+            # Get neighbors via BRIDGE connections
+            cursor = self.holofield_manager.conn.execute("""
+                SELECT target_id, weight FROM engram_connections
+                WHERE source_id = ? AND connection_type = 'BRIDGE'
+                UNION
+                SELECT source_id, weight FROM engram_connections
+                WHERE target_id = ? AND connection_type = 'BRIDGE'
+            """, [current_id, current_id])
+            
+            neighbors = cursor.fetchall()
+            if not neighbors:
+                break
+            
+            # Score each neighbor by proximity to target
+            best_neighbor = None
+            best_score = float('inf')
+            
+            for neighbor in neighbors:
+                neighbor_id = neighbor['target_id'] if neighbor['target_id'] != current_id else neighbor['source_id']
+                
+                if neighbor_id in visited:
+                    continue
+                
+                # Get neighbor coordinates
+                cursor = self.holofield_manager.conn.execute(
+                    "SELECT coords_16d FROM engrams WHERE id = ?",
+                    (neighbor_id,)
+                )
+                neighbor_row = cursor.fetchone()
+                if not neighbor_row:
+                    continue
+                
+                neighbor_coords = np.array(json.loads(neighbor_row['coords_16d']))
+                
+                # Distance to target
+                dist_to_target = np.linalg.norm(neighbor_coords - target_coords)
+                
+                # Weight by connection strength (lower is better)
+                score = dist_to_target * (1.1 - neighbor['weight'])
+                
+                if score < best_score:
+                    best_score = score
+                    best_neighbor = neighbor_id
+            
+            if not best_neighbor:
+                break
+            
+            # Move to best neighbor
+            current_id = best_neighbor
+            path.append(current_id)
+            visited.add(current_id)
+            
+            # Check if we're close enough to target
+            cursor = self.holofield_manager.conn.execute(
+                "SELECT coords_16d FROM engrams WHERE id = ?",
+                (current_id,)
+            )
+            current_coords = np.array(json.loads(cursor.fetchone()['coords_16d']))
+            
+            if np.linalg.norm(current_coords - target_coords) < 0.5:
+                # Close enough!
+                return path
+        
+        return path if len(path) > 1 else []
 
     def _global_navigation(
         self, start_coords: np.ndarray, target_coords: np.ndarray, max_hops: int
     ) -> List[str]:
         """
         GLOBAL navigation: Semantic search in 16D (attention-like).
-
-        TODO: Implement semantic search
+        
+        Strategy: Greedy best-first search using 16D proximity,
+        ignoring BRIDGE connections (pure semantic similarity).
+        
+        Args:
+            start_coords: Starting 16D coordinates
+            target_coords: Target 16D coordinates
+            max_hops: Maximum navigation steps
+            
+        Returns:
+            List of engram IDs forming path
         """
-        # Placeholder for now
-        return []
+        import json
+        
+        # Find nearest engram to start
+        cursor = self.holofield_manager.conn.execute("""
+            SELECT id, coords_16d FROM engrams
+            LIMIT 100
+        """)
+        
+        best_start = None
+        best_dist = float('inf')
+        
+        for row in cursor:
+            coords = np.array(json.loads(row['coords_16d']))
+            dist = np.linalg.norm(coords - start_coords)
+            if dist < best_dist:
+                best_dist = dist
+                best_start = row['id']
+        
+        if not best_start:
+            return []
+        
+        current_id = best_start
+        path = [current_id]
+        visited = {current_id}
+        
+        for hop in range(max_hops):
+            # Get current position
+            cursor = self.holofield_manager.conn.execute(
+                "SELECT coords_16d FROM engrams WHERE id = ?",
+                (current_id,)
+            )
+            current_coords = np.array(json.loads(cursor.fetchone()['coords_16d']))
+            
+            # Check if close to target
+            if np.linalg.norm(current_coords - target_coords) < 0.5:
+                return path
+            
+            # Find nearest unvisited engram in direction of target
+            direction = target_coords - current_coords
+            direction = direction / (np.linalg.norm(direction) + 1e-8)
+            
+            # Sample candidates (limit for performance)
+            cursor = self.holofield_manager.conn.execute(
+                "SELECT id, coords_16d FROM engrams LIMIT 500"
+            )
+            
+            best_next = None
+            best_score = float('inf')
+            
+            for row in cursor:
+                if row['id'] in visited:
+                    continue
+                
+                coords = np.array(json.loads(row['coords_16d']))
+                
+                # Score: distance to target, but also progress in right direction
+                dist_to_target = np.linalg.norm(coords - target_coords)
+                progress = np.dot(coords - current_coords, direction)
+                
+                score = dist_to_target - 0.3 * progress  # Reward progress
+                
+                if score < best_score:
+                    best_score = score
+                    best_next = row['id']
+            
+            if not best_next:
+                break
+            
+            current_id = best_next
+            path.append(current_id)
+            visited.add(current_id)
+        
+        return path if len(path) > 1 else []
 
     def _adaptive_navigation(
         self,
@@ -323,11 +496,41 @@ class ZooperSwarm(EngramCreator):
     ) -> List[str]:
         """
         ADAPTIVE navigation: Hybrid mixing based on coherence.
-
-        TODO: Implement hybrid strategy
+        
+        Higher coherence -> more LOCAL (follow BRIDGE connections)
+        Lower coherence -> more GLOBAL (semantic search)
+        
+        Args:
+            start_coords: Starting 16D coordinates
+            target_coords: Target 16D coordinates
+            max_hops: Maximum navigation steps
+            coherence: Kuramoto order parameter (0.5-0.8)
+            
+        Returns:
+            List of engram IDs forming path
         """
-        # Placeholder for now
-        return []
+        # Mix ratio based on coherence
+        # r=0.5 -> 50% local, 50% global
+        # r=0.8 -> 80% local, 20% global
+        local_weight = (coherence - 0.5) / 0.3  # Normalize to 0-1
+        local_weight = max(0.3, min(0.8, local_weight))
+        
+        # Try local first (weighted by coherence)
+        if np.random.random() < local_weight:
+            path = self._local_navigation(start_coords, target_coords, max_hops)
+            if path:
+                return path
+        
+        # Fall back to global
+        path = self._global_navigation(start_coords, target_coords, max_hops)
+        if path:
+            return path
+        
+        # Try the other method if first failed
+        if np.random.random() < local_weight:
+            return self._global_navigation(start_coords, target_coords, max_hops)
+        else:
+            return self._local_navigation(start_coords, target_coords, max_hops)
 
     def get_statistics(self) -> Dict[str, Any]:
         """
