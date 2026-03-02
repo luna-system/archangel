@@ -52,6 +52,13 @@ Article (knowledge engram)
 - Not purely numeric
 - Maximum 20 bigrams per article (quality over quantity)
 
+**Trigram Engrams (3-grams):**
+- Minimum frequency: 3 (higher bar for quality)
+- Not two or more stop words (allow at most one)
+- Not purely numeric
+- Maximum 10 trigrams per article
+- Links to component words AND bigrams
+
 **Co-Occurrence Edges:**
 - Created only for words appearing in same article
 - Weight increases with co-occurrence frequency
@@ -109,7 +116,8 @@ def generate(start_word, length=20):
 
 ### Scale
 - **1-gram engrams:** 1,383 words
-- **2-gram engrams:** 495 bigrams  
+- **2-gram engrams:** 495 bigrams
+- **3-gram engrams:** 2 trigrams (quality over quantity!)
 - **Co-occurrence edges:** 896 connections
 - **Navigation success:** 98.6% (213/216 queries)
 
@@ -139,14 +147,17 @@ Balanced:  time cells deep cordillera other hebrew...     (combined)
 
 ## Future Work
 
-### 3-Gram Engrams
-Next target: trigram engrams for richer phrase capture.
+### Scale Up Engrams
+Current state is a prototype. Production scale would require:
+- Process all 389,955 articles (not just samples)
+- Build full co-occurrence graph across entire corpus
+- Estimated: 10,000+ words, 5,000+ bigrams, 500+ trigrams
 
-**Quality Thresholds (proposed):**
-- Minimum frequency: 3 (higher bar than bigrams)
-- Not two stop words in sequence
-- Maximum 10 trigrams per article
-- Prefer named entities and compound terms
+### Trigram-Aware Generation
+Integrate trigrams into triple-stream generator:
+- Sample word/bigram/trigram based on attention
+- Emit 1, 2, or 3 words depending on token type
+- Trigram connections for even richer navigation
 
 ### Enhanced Co-Occurrence
 - Weight by document similarity (not just presence)
@@ -157,6 +168,7 @@ Next target: trigram engrams for richer phrase capture.
 - Perplexity measurement on held-out text
 - Human evaluation of coherence
 - Stream personality classification accuracy
+- Compare 1-gram vs 2-gram vs 3-gram generation quality
 
 ## References
 
