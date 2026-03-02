@@ -567,6 +567,48 @@ components:
             shape: [16]
         returns:
           type: List[InterferencePattern]
+      
+      import_sif:
+        description: "Import SIF entities into holofield (ADR-0016)"
+        parameters:
+          - name: sif_path
+            type: str
+            description: "Path to .sif.json file"
+          - name: engram_type
+            type: str
+            default: "knowledge"
+            description: "Type for imported entities"
+          - name: create_connections
+            type: bool
+            default: true
+            description: "Create BRIDGE connections from relationships"
+          - name: batch_size
+            type: int
+            default: 1000
+            description: "Records per batch insert"
+        returns:
+          type: Dict[str, int]
+          description: "Stats dict with entity and connection counts"
+      
+      export_sif:
+        description: "Export holofield to SIF format (ADR-0016)"
+        parameters:
+          - name: sif_path
+            type: str
+            description: "Output path for .sif.json"
+          - name: engram_types
+            type: Optional[List[str]]
+            description: "Filter by engram types"
+          - name: query_coords
+            type: Optional[np.ndarray]
+            description: "Export engrams near query point"
+          - name: include_connections
+            type: bool
+            default: true
+            description: "Include BRIDGE connections"
+        returns:
+          type: Dict[str, int]
+          description: "Stats dict with exported counts"
     
     inputs:
       - all_engrams
