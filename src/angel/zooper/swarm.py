@@ -320,7 +320,12 @@ class ZooperSwarm(EngramCreator):
         article_coords: np.ndarray,
     ) -> List[str]:
         """
-        Create engrams for discovered words/phrases.
+        Create engrams for discovered words/phrases with DEDUPLICATION.
+        
+        Strategy:
+        1. Check if word engram already exists → link to it
+        2. Only create new if word appears > 1 time (recurrency threshold)
+        3. No more duplicate "the" engrams!
 
         Args:
             decomposition: N-grams from decomposition
@@ -328,31 +333,67 @@ class ZooperSwarm(EngramCreator):
             article_coords: Article's 16D coordinates
 
         Returns:
-            List of word engram IDs
+            List of word engram IDs (existing or newly created)
         """
         word_engram_ids = []
+        
+        # Get all words with their frequencies
+        all_words = decomposition.get(1, [])
+        
+        # Count frequency of each word
+        from collections import Counter
+        word_freq = Counter(all_words)
+        
+        # Only process words that appear > 1 time (recurrency threshold!)
+        # AND limit to top 50 most frequent
+        frequent_words = [
+            word for word, count in word_freq.most_common(50)
+            if count > 1 and len(word) > 1  # Must appear >1 time, >1 char
+        ]
 
-        # Sample words to create engrams for (don't create ALL of them!)
-        sample_words = decomposition.get(1, [])[:50]  # First 50 words
+        for word in frequent_words:
+            # DEDUPLICATION: Check if word engram already exists
+            existing_id = self._find_word_engram(word)
+            
+            if existing_id:
+                # Word already exists! Just link to it
+                word_engram_ids.append(existing_id)
+            else:
+                # Create NEW word engram
+                word_engram = self.create_engram(
+                    content=word,
+                    data={"word": word, "parent_article": article_id},
+                    engram_type="language",
+                    metadata={
+                        "word": word,
+                        "source": "zooper_decomposition",
+                        "parent_article": article_id,
+                        "frequency": word_freq[word],
+                    },
+                )
 
-        for word in sample_words:
-            # Create word engram
-            word_engram = self.create_engram(
-                content=word,
-                data={"word": word, "parent_article": article_id},
-                engram_type="language",
-                metadata={
-                    "word": word,
-                    "source": "zooper_decomposition",
-                    "parent_article": article_id,
-                },
-            )
-
-            # Store word engram
-            word_id = self.store_engram(word_engram)
-            word_engram_ids.append(word_id)
+                # Store word engram
+                word_id = self.store_engram(word_engram)
+                word_engram_ids.append(word_id)
 
         return word_engram_ids
+    
+    def _find_word_engram(self, word: str) -> Optional[str]:
+        """
+        Find existing word engram by content (DEDUPLICATION).
+        
+        Args:
+            word: Word to search for
+            
+        Returns:
+            Engram ID if found, None otherwise
+        """
+        cursor = self.holofield_manager.conn.execute(
+            "SELECT id FROM engrams WHERE content = ? AND engram_type = 'language' LIMIT 1",
+            (word,)
+        )
+        row = cursor.fetchone()
+        return row['id'] if row else None
 
     def _create_hebbian_edges(self, article_id: str, word_engram_ids: List[str]):
         """
