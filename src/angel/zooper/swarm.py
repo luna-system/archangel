@@ -214,6 +214,7 @@ class ZooperSwarm(EngramCreator):
         Navigate from start to target using hybrid strategy.
 
         Uses Kuramoto coherence to decide LOCAL/GLOBAL/ADAPTIVE mode.
+        Strengthens Hebbian edges along successful paths (learning!)
 
         Args:
             start_coords: Starting 16D coordinates
@@ -229,13 +230,38 @@ class ZooperSwarm(EngramCreator):
         # Choose navigation mode based on coherence
         if r > 0.8:
             # HIGH coherence - use LOCAL (wikilinks)
-            return self._local_navigation(start_coords, target_coords, max_hops)
+            path = self._local_navigation(start_coords, target_coords, max_hops)
         elif r < 0.5:
             # LOW coherence - use GLOBAL (semantic search)
-            return self._global_navigation(start_coords, target_coords, max_hops)
+            path = self._global_navigation(start_coords, target_coords, max_hops)
         else:
             # MEDIUM coherence - use ADAPTIVE (hybrid)
-            return self._adaptive_navigation(start_coords, target_coords, max_hops, r)
+            path = self._adaptive_navigation(start_coords, target_coords, max_hops, r)
+        
+        # Hebbian learning: strengthen edges along successful path!
+        if path and len(path) > 1:
+            self._strengthen_path_edges(path)
+        
+        return path
+    
+    def _strengthen_path_edges(self, path: List[str]):
+        """
+        Strengthen Hebbian edges along a successful navigation path.
+        
+        "Neurons that fire together, wire together!"
+        
+        Args:
+            path: List of engram IDs forming successful path
+        """
+        for i in range(len(path) - 1):
+            source_id = path[i]
+            target_id = path[i + 1]
+            
+            # Strengthen this edge (Hebbian learning!)
+            self.edge_weights.strengthen(source_id, target_id, amount=0.15)
+            
+            # Also strengthen in reverse direction (bidirectional)
+            self.edge_weights.strengthen(target_id, source_id, amount=0.1)
 
     def _create_word_engrams(
         self,
