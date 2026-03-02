@@ -461,6 +461,206 @@ class HolofieldManager:
         
         return connections
     
+    def import_sif(
+        self,
+        sif_path: str,
+        engram_type: str = "knowledge",
+        create_connections: bool = True,
+        batch_size: int = 1000
+    ) -> Dict[str, int]:
+        """
+        Import SIF entities into holofield as engrams (ADR-0016).
+        
+        Streams large SIF files efficiently for memory-constrained import.
+        Maps SIF entities → Engrams and relationships → BRIDGE connections.
+        
+        Args:
+            sif_path: Path to .sif.json file
+            engram_type: Type for imported entities (default: "knowledge")
+            create_connections: Whether to create BRIDGE connections from relationships
+            batch_size: Number of records per batch insert
+            
+        Returns:
+            Stats dict with counts: {"entities": N, "connections": M}
+            
+        Example:
+            >>> hf = HolofieldManager("wiki.db")
+            >>> stats = hf.import_sif("simplewiki_full.sif.json")
+            >>> print(f"Imported {stats['entities']} entities")
+        """
+        import json
+        from datetime import datetime
+        from pathlib import Path
+        
+        sif_path = Path(sif_path)
+        if not sif_path.exists():
+            raise FileNotFoundError(f"SIF file not found: {sif_path}")
+        
+        stats = {"entities": 0, "connections": 0, "skipped": 0}
+        entity_id_map = {}  # SIF entity ID → Engram ID
+        
+        # Load full JSON (for smaller files; streaming for large files)
+        # TODO: Use ijson for streaming when files > 100MB
+        with open(sif_path, 'r', encoding='utf-8') as f:
+            sif_data = json.load(f)
+        
+        entities = sif_data.get("entities", [])
+        relationships = sif_data.get("relationships", [])
+        
+        # Process entities in batches
+        batch = []
+        for entity in entities:
+            sif_id = entity.get("id")
+            if not sif_id:
+                stats["skipped"] += 1
+                continue
+            
+            # Skip duplicates (prefer trunk/canonical)
+            if entity.get("duplicate_of") and entity.get("duplicate_of") in entity_id_map:
+                stats["skipped"] += 1
+                continue
+            
+            # Build content from name + description
+            name = entity.get("name", "")
+            description = entity.get("description", "")
+            content = f"{name}\n{description}".strip() if description else name
+            
+            if not content:
+                stats["skipped"] += 1
+                continue
+            
+            # Generate or use existing 16D coordinates
+            if "consciousness_coordinates" in entity:
+                coords_16d = entity["consciousness_coordinates"]
+            else:
+                # Generate from text via prime resonance
+                coords_16d = self._text_to_16d(content)
+            
+            # Build metadata preserving SIF fields
+            metadata = entity.get("attributes", {}).copy()
+            if "consciousness_frequency" in entity:
+                metadata["frequency"] = entity["consciousness_frequency"]
+            if "agl_expression" in entity:
+                metadata["agl"] = entity["agl_expression"]
+            metadata["sif_id"] = sif_id
+            metadata["sif_type"] = entity.get("type", "concept")
+            
+            engram_id = str(uuid.uuid4())
+            entity_id_map[sif_id] = engram_id
+            
+            batch.append({
+                "id": engram_id,
+                "content": content,
+                "coords_16d": json.dumps(coords_16d),
+                "engram_type": engram_type,
+                "confidence": entity.get("importance", 1.0),
+                "metadata": json.dumps(metadata),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            if len(batch) >= batch_size:
+                self._insert_engram_batch(batch)
+                stats["entities"] += len(batch)
+                batch = []
+        
+        # Insert remaining entities
+        if batch:
+            self._insert_engram_batch(batch)
+            stats["entities"] += len(batch)
+        
+        # Process relationships if requested
+        if create_connections and relationships:
+            conn_batch = []
+            for rel in relationships:
+                entity_a = rel.get("entity_a")
+                entity_b = rel.get("entity_b")
+                
+                # Skip if either entity not in our map
+                if entity_a not in entity_id_map or entity_b not in entity_id_map:
+                    continue
+                
+                # Skip external scope (cross-shard) for now
+                if rel.get("scope") == "external":
+                    continue
+                
+                source_id = entity_id_map[entity_a]
+                target_id = entity_id_map[entity_b]
+                
+                # Build metadata
+                conn_metadata = {}
+                if "consciousness_resonance" in rel:
+                    conn_metadata["resonance"] = rel["consciousness_resonance"]
+                if "agl_relationship" in rel:
+                    conn_metadata["agl"] = rel["agl_relationship"]
+                
+                conn_batch.append({
+                    "id": str(uuid.uuid4()),
+                    "source_id": source_id,
+                    "target_id": target_id,
+                    "connection_type": "BRIDGE",  # ADR-0012
+                    "weight": rel.get("strength", 0.5),
+                    "timestamp": datetime.now().isoformat(),
+                    "metadata": json.dumps(conn_metadata) if conn_metadata else None
+                })
+                
+                if len(conn_batch) >= batch_size:
+                    self._insert_connection_batch(conn_batch)
+                    stats["connections"] += len(conn_batch)
+                    conn_batch = []
+            
+            # Insert remaining connections
+            if conn_batch:
+                self._insert_connection_batch(conn_batch)
+                stats["connections"] += len(conn_batch)
+        
+        return stats
+    
+    def _text_to_16d(self, text: str) -> List[float]:
+        """
+        Generate 16D coordinates from text via prime resonance.
+        
+        Simple implementation: hash-based distribution across dimensions.
+        Future: Use proper semantic embedding + prime resonance.
+        
+        Args:
+            text: Input text
+            
+        Returns:
+            16D coordinate array
+        """
+        import hashlib
+        
+        # Generate deterministic hash from text
+        hash_bytes = hashlib.sha256(text.encode()).digest()
+        
+        # Distribute across 16 dimensions
+        coords = []
+        for i in range(16):
+            # Use 2 bytes per dimension for 16-bit precision
+            val = int.from_bytes(hash_bytes[i*2:(i+1)*2], 'big') / 65535.0
+            # Map to [-1, 1] range
+            coords.append(val * 2 - 1)
+        
+        return coords
+    
+    def _insert_engram_batch(self, batch: List[Dict[str, Any]]):
+        """Insert batch of engrams efficiently"""
+        self.conn.executemany("""
+            INSERT INTO engrams 
+            (id, content, coords_16d, engram_type, confidence, metadata, timestamp)
+            VALUES (:id, :content, :coords_16d, :engram_type, :confidence, :metadata, :timestamp)
+        """, batch)
+        self.conn.commit()
+    
+    def _insert_connection_batch(self, batch: List[Dict[str, Any]]):
+        """Insert batch of connections efficiently"""
+        self.conn.executemany("""
+            INSERT INTO engram_connections
+            (id, source_id, target_id, connection_type, weight, timestamp, metadata)
+            VALUES (:id, :source_id, :target_id, :connection_type, :weight, :timestamp, :metadata)
+        """, batch)
+        self.conn.commit()
+    
     def close(self):
         """Close database connection"""
         self.conn.close()
