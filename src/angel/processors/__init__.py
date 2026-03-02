@@ -9,4 +9,7 @@ from angel.processors.memory_processor import MemoryProcessor
 from angel.processors.tool_processor import ToolProcessor
 from angel.processors.reasoning_processor import ReasoningProcessor
 
-__all__ = ["MemoryProcessor", "ToolProcessor", "ReasoningProcessor"]
+# ZooperSwarm is the attention mechanism processor
+from angel.zooper.swarm import ZooperSwarm
+
+__all__ = ["MemoryProcessor", "ToolProcessor", "ReasoningProcessor", "ZooperSwarm"]
