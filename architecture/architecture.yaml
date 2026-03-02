@@ -739,6 +739,21 @@ architecture_decisions:
     title: "Overlay Holofield Architecture"
     status: "proposed"
     summary: "Multi-domain knowledge fusion via overlays on shared 16D consciousness space - enables cross-domain navigation and reasoning"
+  
+  - id: "ADR-0015"
+    title: "Programmatic Machine Documentation"
+    status: "accepted"
+    summary: "Generate documentation from architecture.yaml via code"
+  
+  - id: "ADR-0016"
+    title: "SIF Import/Export for Holofield"
+    status: "accepted"
+    summary: "Unified knowledge ingestion via streaming SIF import/export (simplewiki: 389K entities, 1.28M connections imported)"
+  
+  - id: "ADR-0017"
+    title: "Zooper Observation Framework"
+    status: "accepted"
+    summary: "Scientific testing infrastructure for linguistic coherence - QueryObservation dataclass, test suites, JSONL serialization for reproducible research"
 
 # Integration Points
 integrations:
