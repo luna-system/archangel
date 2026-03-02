@@ -241,6 +241,9 @@ class ZooperSwarm(EngramCreator):
         # Hebbian learning: strengthen edges along successful path!
         if path and len(path) > 1:
             self._strengthen_path_edges(path)
+            
+            # Exploration: create engrams from discovered path content!
+            self._create_exploration_engrams(path)
         
         return path
     
@@ -262,6 +265,53 @@ class ZooperSwarm(EngramCreator):
             
             # Also strengthen in reverse direction (bidirectional)
             self.edge_weights.strengthen(target_id, source_id, amount=0.1)
+    
+    def _create_exploration_engrams(self, path: List[str]) -> int:
+        """
+        Create new engrams from content discovered during navigation.
+        
+        This is how the swarm learns from exploration - new concepts
+        get engram-ized and linked to the navigation path!
+        
+        Args:
+            path: List of engram IDs in successful navigation path
+            
+        Returns:
+            Number of new engrams created
+        """
+        import json
+        
+        new_engram_count = 0
+        
+        # Process each engram in the path
+        for engram_id in path:
+            # Get engram content
+            cursor = self.holofield_manager.conn.execute(
+                "SELECT content, coords_16d FROM engrams WHERE id = ?",
+                (engram_id,)
+            )
+            row = cursor.fetchone()
+            if not row:
+                continue
+            
+            content = row['content']
+            article_coords = json.loads(row['coords_16d'])
+            
+            # Decompose this content
+            article_data = {"content": content}
+            decomposition = self.parallel_decompose(article_data)
+            
+            # Create word engrams from decomposition
+            word_engrams = self._create_word_engrams(
+                decomposition, engram_id, article_coords
+            )
+            
+            # Create Hebbian edges
+            self._create_hebbian_edges(engram_id, word_engrams)
+            
+            new_engram_count += len(word_engrams)
+        
+        return new_engram_count
 
     def _create_word_engrams(
         self,
