@@ -12,6 +12,7 @@ import sys
 import json
 import argparse
 import requests
+import numpy as np
 from datetime import datetime
 from typing import List, Dict, Optional
 
@@ -48,7 +49,7 @@ class DPLAIngestor:
         self,
         query: str,
         page_size: int = 100,
-        rights: Optional[str] = "Public Domain"
+        rights: Optional[str] = None
     ) -> List[Dict]:
         """
         Search DPLA for items matching query.
@@ -98,37 +99,58 @@ class DPLAIngestor:
         
         parts = []
         
+        def extract_string(value):
+            """Extract string from potentially nested structure."""
+            if isinstance(value, str):
+                return value
+            elif isinstance(value, list):
+                # Take first string item
+                for item in value:
+                    if isinstance(item, str):
+                        return item
+                    elif isinstance(item, dict) and 'name' in item:
+                        return item['name']
+                return ""
+            elif isinstance(value, dict):
+                # Try common fields
+                return value.get('name', value.get('text', ''))
+            return ""
+        
         # Title (always present)
-        title = resource.get("title")
+        title = extract_string(resource.get("title"))
         if title:
-            if isinstance(title, list):
-                parts.extend(title)
-            else:
-                parts.append(title)
+            parts.append(title)
         
         # Description (often contains full text or abstract)
-        description = resource.get("description")
+        description = extract_string(resource.get("description"))
         if description:
-            if isinstance(description, list):
-                parts.extend(description)
-            else:
-                parts.append(description)
+            parts.append(description)
         
         # Subject tags (useful for vocabulary)
         subjects = resource.get("subject", [])
         if subjects:
             if isinstance(subjects, list):
-                parts.extend(subjects)
+                for subj in subjects:
+                    s = extract_string(subj)
+                    if s:
+                        parts.append(s)
             else:
-                parts.append(subjects)
+                s = extract_string(subjects)
+                if s:
+                    parts.append(s)
         
         # Creator/author
         creators = resource.get("creator", [])
         if creators:
             if isinstance(creators, list):
-                parts.extend(creators)
+                for creator in creators:
+                    c = extract_string(creator)
+                    if c:
+                        parts.append(c)
             else:
-                parts.append(creators)
+                c = extract_string(creators)
+                if c:
+                    parts.append(c)
         
         return " ".join(filter(None, parts))
     
