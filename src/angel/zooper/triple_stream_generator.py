@@ -106,14 +106,16 @@ class TripleStreamMarkovGenerator:
         return None
     
     def _get_neighbors(self, word_id: str) -> List[Tuple[WordNode, float]]:
-        """Get neighboring words via HEBBIAN edges with weights."""
+        """Get neighboring words via CO_OCCUR edges for Markov generation."""
         cursor = self.hf.conn.execute(
             """
             SELECT e.id, e.content, e.coords_16d, e.metadata, c.weight
             FROM engram_connections c
             JOIN engrams e ON c.target_id = e.id
-            WHERE c.source_id = ? AND c.connection_type = 'HEBBIAN'
+            WHERE c.source_id = ? AND c.connection_type = 'CO_OCCUR'
             AND e.engram_type = 'language'
+            ORDER BY c.weight DESC
+            LIMIT 20
             """,
             (word_id,)
         )
