@@ -301,9 +301,9 @@ class ZooperSwarm(EngramCreator):
             article_data = {"content": content}
             decomposition = self.parallel_decompose(article_data)
             
-            # Create word engrams from decomposition
+            # Create word engrams from decomposition (pass raw content for frequency!)
             word_engrams = self._create_word_engrams(
-                decomposition, engram_id, article_coords
+                decomposition, engram_id, article_coords, raw_content=content
             )
             
             # Create Hebbian edges
@@ -318,31 +318,40 @@ class ZooperSwarm(EngramCreator):
         decomposition: Dict[int, List],
         article_id: str,
         article_coords: np.ndarray,
+        raw_content: str = None,
     ) -> List[str]:
         """
         Create engrams for discovered words/phrases with DEDUPLICATION.
         
         Strategy:
-        1. Check if word engram already exists → link to it
-        2. Only create new if word appears > 1 time (recurrency threshold)
-        3. No more duplicate "the" engrams!
+        1. Calculate RAW word frequencies (not deduped) for threshold
+        2. Check if word engram already exists → link to it  
+        3. Only create new if word appears > 1 time (recurrency threshold)
+        4. No more duplicate "the" engrams!
 
         Args:
             decomposition: N-grams from decomposition
             article_id: Parent article engram ID
             article_coords: Article's 16D coordinates
+            raw_content: Original content for frequency calculation (optional)
 
         Returns:
             List of word engram IDs (existing or newly created)
         """
+        import re
+        from collections import Counter
+        
         word_engram_ids = []
         
-        # Get all words with their frequencies
-        all_words = decomposition.get(1, [])
-        
-        # Count frequency of each word
-        from collections import Counter
-        word_freq = Counter(all_words)
+        # Calculate RAW word frequencies from content (not deduped!)
+        # Decomposition returns unique words, but we need actual frequencies
+        if raw_content:
+            raw_words = re.findall(r'\b\w+\b', raw_content.lower())
+            word_freq = Counter(raw_words)
+        else:
+            # Fallback: use decomposition (less accurate but works)
+            all_words = decomposition.get(1, [])
+            word_freq = Counter(all_words)
         
         # Only process words that appear > 1 time (recurrency threshold!)
         # AND limit to top 50 most frequent
